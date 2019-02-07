@@ -1,0 +1,41 @@
+{
+    "name": "brexis/laravel-sso",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Boris Koumondji",
+            "email": "brexis2009@yahoo.fr"
+        }
+    ],
+    "require": {
+        "php" : "^7.1",
+        "illuminate/config": "~5.5.0|~5.6.0|~5.7.0",
+        "illuminate/database": "~5.5.0|~5.6.0|~5.7.0",
+        "illuminate/support": "~5.5.0|~5.6.0|~5.7.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "~3.5.0|~3.6.0|~3.7.0",
+        "phpunit/phpunit": "^7.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "Brexis\\LaravelSSO\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Brexis\\LaravelSSO\\Test\\": "tests"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit"
+    },
+    "license": "MIT",
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Brexis\\LaravelSSO\\LaravelSSOServiceProvider"
+            ]
+        }
+    }
+}
