@@ -4,7 +4,6 @@ namespace Brexis\LaravelSSO\Test;
 
 use Brexis\LaravelSSO\SessionManager;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Contracts\Cache\Store;
 
 class SessionManagerTest extends TestCase
 {

@@ -1,7 +1,6 @@
 <?php
 
 namespace Brexis\LaravelSSO;
-use Cache;
 
 class BrokerManager
 {

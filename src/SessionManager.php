@@ -54,6 +54,6 @@ class SessionManager
      */
     public function start($sid)
     {
-        $this->set($sid, '');
+        $this->set($sid, '{}');
     }
 }

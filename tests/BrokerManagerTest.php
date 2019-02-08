@@ -9,16 +9,6 @@ use Illuminate\Http\Request;
 
 class BrokerManagerTest extends TestCase
 {
-    protected function generateToken()
-    {
-        return base_convert(md5(uniqid(rand(), true)), 16, 36);
-    }
-
-    protected function generateSessionId($brocer_id, $token, $secret)
-    {
-        return "SSO-{$brocer_id}-{$token}-" . hash('sha256', 'session' . $token . $secret);
-    }
-
     public function setUp()
     {
         parent::setUp();

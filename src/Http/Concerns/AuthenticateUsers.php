@@ -11,12 +11,11 @@ trait AuthenticatesUsers
     {
         if ($this->attemptLogin($request)) {
             $sid = $this->broker->getBrokerSessionId($request);
+            $session_value = json_encode([
+                $this->username() => $this->sessionValue()
+            ]);
 
-            $this->session->set(
-                $sid,
-                $this->sessionValue(),
-                $request->has('remember')
-            );
+            $this->session->set($sid, $session_value, $request->has('remember'));
 
             return true;
         }
