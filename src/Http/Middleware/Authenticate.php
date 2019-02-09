@@ -46,7 +46,9 @@ class Authenticate
         $attrs = json_decode($this->session->get($sid), true);
 
         if (!empty($attrs)) {
-            return $guard->getProvider()->retrieveByCredentials($attrs);
+            $user = $guard->getProvider()->retrieveByCredentials($attrs);
+            
+            return $user && $guard->onceUsingId($user->id);
         }
 
         return false;

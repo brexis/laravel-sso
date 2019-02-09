@@ -5,14 +5,14 @@ namespace Brexis\LaravelSSO\Http\Concerns;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-trait AuthenticatesUsers
+trait AuthenticateUsers
 {
     protected function authenticate(Request $request, $broker)
     {
         if ($this->attemptLogin($request)) {
             $sid = $this->broker->getBrokerSessionId($request);
             $session_value = json_encode([
-                $this->username() => $this->sessionValue()
+                $this->username() => $this->sessionValue($request)
             ]);
 
             $this->session->set($sid, $session_value, $request->has('remember'));
@@ -35,12 +35,12 @@ trait AuthenticatesUsers
         return $request->only($this->username(), 'password');
     }
 
-    public function username()
+    protected function username()
     {
         return 'email';
     }
 
-    public function sessionValue(Request $request)
+    protected function sessionValue(Request $request)
     {
         return $request->input($this->username());
     }
@@ -50,8 +50,13 @@ trait AuthenticatesUsers
         return Auth::guard();
     }
 
-    public function userInfo($username)
+    protected function userInfo($username)
     {
-        //
+        return $this->guard()
+                    ->getProvider()
+                    ->retrieveByCredentials([
+                        $this->username() => $username
+                    ])
+                    ->toArray();
     }
 }

@@ -3,14 +3,17 @@
 namespace Brexis\LaravelSSO\Http\Controllers;
 
 use Brexis\LaravelSSO\BrokerManager;
+use Brexis\LaravelSSO\SessionManager;
 use Brexis\LaravelSSO\Http\Middleware\ValidateBroker;
-use Brexis\LaravelSSO\Http\Concerns\AuthenticatesUsers;
+use Brexis\LaravelSSO\Http\Concerns\AuthenticateUsers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Routing\Controller;
+use Validator;
 
 class ServerController extends Controller
 {
-    use AuthenticatesUsers;
+    use AuthenticateUsers;
 
     protected $broker;
 
@@ -18,7 +21,7 @@ class ServerController extends Controller
 
     protected $return_type = null;
 
-    public function __construc(BrokerManager $broker, SessionManager $session)
+    public function __construct(BrokerManager $broker, SessionManager $session)
     {
         $this->middleware(ValidateBroker::class)->except('attach');
 
@@ -28,37 +31,48 @@ class ServerController extends Controller
 
     public function attach(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'broker' => 'required',
+            'token' => 'required',
+            'checksum' => 'required'
+        ]);
+
+         if ($validator->fails()) {
+            return response($validator->errors() . '', 400);
+        }
+
         $this->detectReturnType($request);
+
+        if (!$this->return_type) {
+            return response('No return url specified', 400);
+        }
 
         $broker_id = $request->input('broker');
         $token     = $request->input('token');
         $checksum  = $request->input('checksum');
 
-        if (!$this->return_type) {
-            throw new \Exception('No return url specified');
-        }
-
         $gen_checksum = $this->broker->generateAttachChecksum($broker_id, $token);
 
         if (!$checksum || $checksum !== $gen_checksum) {
-            throw new \Exception('Invalid checksum');
+            return response('Invalid checksum', 400);
         }
 
-        $sid = $this->generateSessionId($broker_id, $token);
+        $sid = $this->broker->generateSessionId($broker_id, $token);
         $this->session->start($sid);
 
-        return $this->outputAttachSuccess();
+        return $this->outputAttachSuccess($request);
     }
 
     public function login(Request $request)
     {
         if ($this->authenticate($request, $this)) {
-            return response()->json(
-                $this->userInfo(
-                    $this->sessionValue()
-                )
-            );
+            return response()->json([
+                'success' => true,
+                'user' => $this->userInfo($this->sessionValue($request))
+            ]);
         }
+
+        return response()->json(['success' => false], 401);
     }
 
     protected function detectReturnType(Request $request)
@@ -67,9 +81,7 @@ class ServerController extends Controller
             $this->return_type = 'redirect';
         } elseif ($request->has('callback')) {
             $this->return_type = 'jsonp';
-        } elseif ($request->accepts('image/*')) {
-            $this->return_type = 'image';
-        } elseif ($request->acceptsJson()) {
+        } elseif ($request->expectsJson()) {
             $this->return_type = 'json';
         }
     }
@@ -78,10 +90,6 @@ class ServerController extends Controller
     {
         $callback = $request->input('callback');
         $return_url = $request->input('return_url');
-
-        if ($this->return_type === 'image') {
-            return $this->outputImage();
-        }
 
         if ($this->return_type === 'json') {
             return response()->json(['success' => 'attached']);
@@ -95,15 +103,5 @@ class ServerController extends Controller
         if ($this->return_type === 'redirect') {
             return redirect()->away($return_url);
         }
-    }
-
-    /**
-     * Output a 1x1px transparent image
-     */
-    protected function outputImage()
-    {
-        return response(base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQ'
-            . 'MAAAAl21bKAAAAA1BMVEUAAACnej3aAAAAAXRSTlMAQObYZg'
-            . 'AAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII='));
     }
 }

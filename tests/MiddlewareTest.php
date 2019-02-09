@@ -8,6 +8,7 @@ use Brexis\LaravelSSO\Http\Middleware\Authenticate;
 use Brexis\LaravelSSO\Http\Middleware\ValidateBroker;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Auth;
 
 class SessionManagerTest extends TestCase
 {
@@ -101,7 +102,7 @@ class SessionManagerTest extends TestCase
     public function testShouldSuccessAuthentication()
     {
         Models\App::create(['app_id' => 'appid', 'secret' => 'SeCrEt']);
-        Models\User::create([
+        $user = Models\User::create([
             'username' => 'admin', 'email' => 'admin@admin.com',
             'password' => bcrypt('secret')
         ]);
@@ -112,10 +113,11 @@ class SessionManagerTest extends TestCase
 
         $request = new Request(['access_token' => $sid, 'username' => 'admin', 'password' => 'secret']);
 
-        $response = $this->authenticateMiddleware->handle($request, function () {
+        $response = $this->authenticateMiddleware->handle($request, function ($request) {
             return (new Response())->setContent('<html></html>');
         });
 
         $this->assertEquals($response->status(), 200);
+        $this->assertEquals(Auth::user()->id, $user->id);
     }
 }
