@@ -3,6 +3,7 @@
 namespace Brexis\LaravelSSO\Test;
 
 use Brexis\LaravelSSO\BrokerManager;
+use Brexis\LaravelSSO\Exceptions\InvalidSessionIdException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Contracts\Cache\Store;
 use Illuminate\Http\Request;
@@ -17,7 +18,7 @@ class BrokerManagerTest extends TestCase
 
     public function testShouldThrownExceptionIfBrokerModelDoesNotExist()
     {
-        $this->expectException(\Exception::class);
+        $this->expectException(InvalidSessionIdException::class);
         $this->expectExceptionMessage('Class Models\TestApp does not exist');
 
         $this->app['config']->set('laravel-sso.brokers.model', 'Models\TestApp');
@@ -35,7 +36,7 @@ class BrokerManagerTest extends TestCase
 
     public function testShouldThrownExceptionIfModelDoesNotExist()
     {
-        $this->expectException(\Exception::class);
+        $this->expectException(InvalidSessionIdException::class);
         $this->expectExceptionMessage('Class Models\TestApp does not exist');
 
         $this->app['config']->set('laravel-sso.brokers.model', 'Models\TestApp');
@@ -60,7 +61,7 @@ class BrokerManagerTest extends TestCase
 
     public function testShouldNotValidateSessionId()
     {
-        $this->expectException(\Exception::class);
+        $this->expectException(InvalidSessionIdException::class);
         $this->expectExceptionMessage('Invalid session id');
 
         $this->app['config']->set('laravel-sso.brokers.model', Models\App::class);
@@ -72,7 +73,7 @@ class BrokerManagerTest extends TestCase
 
     public function testShouldNotValidateChecksum()
     {
-        $this->expectException(\Exception::class);
+        $this->expectException(InvalidSessionIdException::class);
         $this->expectExceptionMessage('Checksum failed: Client IP address may have changed');
 
         $this->app['config']->set('laravel-sso.brokers.model', Models\App::class);

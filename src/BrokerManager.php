@@ -2,6 +2,8 @@
 
 namespace Brexis\LaravelSSO;
 
+use Brexis\LaravelSSO\Exceptions\InvalidSessionIdException;
+
 class BrokerManager
 {
     public function brokerModel()
@@ -9,7 +11,7 @@ class BrokerManager
         $class = config('laravel-sso.brokers.model');
 
         if (!class_exists($class)) {
-            throw new \Exception("Class $class does not exist");
+            throw new InvalidSessionIdException("Class $class does not exist");
         }
 
         return $class;
@@ -22,7 +24,7 @@ class BrokerManager
         $model    = $class::where($id_field, $id)->first();
 
         if (!$model) {
-            throw new \Exception("Model $class with $id_field:$id not found");
+            throw new InvalidSessionIdException("Model $class with $id_field:$id not found");
         }
 
         return $model;
@@ -40,14 +42,14 @@ class BrokerManager
         $matches = null;
 
         if (!preg_match('/^SSO-(\w*+)-(\w*+)-([a-z0-9]*+)$/', $sid, $matches)) {
-            throw new \Exception('Invalid session id');
+            throw new InvalidSessionIdException('Invalid session id');
         }
 
         $broker_id = $matches[1];
         $token = $matches[2];
 
         if ($this->generateSessionId($broker_id, $token) != $sid) {
-            throw new \Exception('Checksum failed: Client IP address may have changed');
+            throw new InvalidSessionIdException('Checksum failed: Client IP address may have changed');
         }
 
         return $broker_id;

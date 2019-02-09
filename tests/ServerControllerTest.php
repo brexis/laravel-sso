@@ -4,12 +4,12 @@ namespace Brexis\LaravelSSO\Test;
 
 use Brexis\LaravelSSO\BrokerManager;
 use Brexis\LaravelSSO\SessionManager;
-use Brexis\LaravelSSO\Http\Middleware\Authenticate;
-use Brexis\LaravelSSO\Http\Middleware\ValidateBroker;
+use Brexis\LaravelSSO\Exceptions\UnauthorizedException;
+use Brexis\LaravelSSO\Exceptions\NotAttachedException;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
-class SessionManagerTest extends TestCase
+class ServerControllerTest extends TestCase
 {
     protected $broker;
 
@@ -100,6 +100,25 @@ class SessionManagerTest extends TestCase
         $response->assertJson(['success' => 'attached']);
     }
 
+    public function testShouldFailAuthenticateWithoutAttached()
+    {
+        $this->withoutExceptionHandling();
+        $this->expectException(NotAttachedException::class);
+        $this->expectExceptionMessage('Client broker not attached.');
+
+        $secret = 'SeCrEt';
+        Models\App::create(['app_id' => 'appid', 'secret' => $secret]);
+        $token = $this->generateToken();
+        $sid   = $this->generateSessionId('appid', $token, $secret);
+        $checksum = hash('sha256', 'attach' . $token . $secret);
+
+        // With redirect
+        $response = $this->post('/sso/server/login', [
+            'access_token' => $sid,
+            'email' => 'admin@admin.com', 'password' => 'secret'
+        ]);
+    }
+
     public function testShouldFailAuthenticate()
     {
         $secret = 'SeCrEt';
@@ -108,7 +127,10 @@ class SessionManagerTest extends TestCase
         $sid   = $this->generateSessionId('appid', $token, $secret);
         $checksum = hash('sha256', 'attach' . $token . $secret);
 
-        // With redirect
+        $this->json('post', '/sso/server/attach', [
+            'broker' => 'appid', 'token' => $token, 'checksum' => $checksum
+        ]);
+
         $response = $this->post('/sso/server/login', [
             'access_token' => $sid,
             'email' => 'admin@admin.com', 'password' => 'secret'
@@ -131,6 +153,10 @@ class SessionManagerTest extends TestCase
         $sid   = $this->generateSessionId('appid', $token, $secret);
         $checksum = hash('sha256', 'attach' . $token . $secret);
 
+        $this->json('post', '/sso/server/attach', [
+            'broker' => 'appid', 'token' => $token, 'checksum' => $checksum
+        ]);
+
         $response = $this->post('/sso/server/login', [
             'access_token' => $sid,
             'email' => 'admin@admin.com', 'password' => 'secret'
@@ -146,7 +172,7 @@ class SessionManagerTest extends TestCase
     public function testShouldFailReturnUserProfile()
     {
         $this->withoutExceptionHandling();
-        $this->expectException(\Exception::class);
+        $this->expectException(UnauthorizedException::class);
         $this->expectExceptionMessage('Unauthorized');
 
         $secret = 'SeCrEt';
@@ -164,7 +190,7 @@ class SessionManagerTest extends TestCase
             'access_token' => $sid
         ]);
     }
-    
+
     public function testShouldReturnUserProfile()
     {
         $this->withoutExceptionHandling();
@@ -179,6 +205,11 @@ class SessionManagerTest extends TestCase
         $token = $this->generateToken();
         $sid   = $this->generateSessionId('appid', $token, $secret);
         $checksum = hash('sha256', 'attach' . $token . $secret);
+
+
+        $this->json('post', '/sso/server/attach', [
+            'broker' => 'appid', 'token' => $token, 'checksum' => $checksum
+        ]);
 
         $this->post('/sso/server/login', [
             'access_token' => $sid,

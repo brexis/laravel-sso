@@ -6,11 +6,13 @@ use Brexis\LaravelSSO\BrokerManager;
 use Brexis\LaravelSSO\SessionManager;
 use Brexis\LaravelSSO\Http\Middleware\Authenticate;
 use Brexis\LaravelSSO\Http\Middleware\ValidateBroker;
+use Brexis\LaravelSSO\Exceptions\InvalidSessionIdException;
+use Brexis\LaravelSSO\Exceptions\UnauthorizedException;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Auth;
 
-class SessionManagerTest extends TestCase
+class MiddlewareTest extends TestCase
 {
     protected $broker;
 
@@ -38,7 +40,7 @@ class SessionManagerTest extends TestCase
 
     public function testShouldThrownExceptionIfBrokerIsNotValid()
     {
-        $this->expectException(\Exception::class);
+        $this->expectException(InvalidSessionIdException::class);
         $this->expectExceptionMessage('Checksum failed: Client IP address may have changed');
 
         Models\App::create(['app_id' => 'appid', 'secret' => 'SeCrEt']);
@@ -69,7 +71,7 @@ class SessionManagerTest extends TestCase
 
     public function testShouldThrownExceptionIfBrokerIsNotValidForAuthenticate()
     {
-        $this->expectException(\Exception::class);
+        $this->expectException(InvalidSessionIdException::class);
         $this->expectExceptionMessage('Checksum failed: Client IP address may have changed');
 
         Models\App::create(['app_id' => 'appid', 'secret' => 'SeCrEt']);
@@ -85,7 +87,7 @@ class SessionManagerTest extends TestCase
 
     public function testShouldThrownExceptionIfAuthenticationFailed()
     {
-        $this->expectException(\Exception::class);
+        $this->expectException(UnauthorizedException::class);
         $this->expectExceptionMessage('Unauthorized');
 
         Models\App::create(['app_id' => 'appid', 'secret' => 'SeCrEt']);

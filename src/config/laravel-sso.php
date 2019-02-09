@@ -40,6 +40,16 @@ return [
     'broker_client_secret' => null,
 
     /**
+     * The server Url. Required for clients.
+     */
+    'broker_server_url' => '',
+
+    /**
+     * The return Url. Required for clients.
+     */
+    'broker_return_url' => true,
+
+    /**
      * Session live time Default to 60 minutes. Set to null to store forever
      */
     'session_ttl' => 60,

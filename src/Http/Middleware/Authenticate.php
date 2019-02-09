@@ -5,6 +5,8 @@ namespace Brexis\LaravelSSO\Http\Middleware;
 use Closure;
 use Brexis\LaravelSSO\BrokerManager;
 use Brexis\LaravelSSO\SessionManager;
+use Brexis\LaravelSSO\Exceptions\UnauthorizedException;
+
 use Illuminate\Support\Facades\Auth;
 
 class Authenticate
@@ -38,7 +40,7 @@ class Authenticate
             return $next($request);
         }
 
-        throw new \Exception('Unauthorized');
+        throw new UnauthorizedException(401, 'Unauthorized');
     }
 
     protected function check($guard, $sid)
@@ -47,7 +49,7 @@ class Authenticate
 
         if (!empty($attrs)) {
             $user = $guard->getProvider()->retrieveByCredentials($attrs);
-            
+
             return $user && $guard->onceUsingId($user->id);
         }
 

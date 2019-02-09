@@ -38,6 +38,6 @@ class SessionManagerTest extends TestCase
     {
         $this->session->start('session_id');
 
-        $this->assertEquals(Cache::get('session_id'), '');
+        $this->assertEquals(Cache::get('session_id'), '{}');
     }
 }
