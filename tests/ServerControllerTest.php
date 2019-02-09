@@ -102,8 +102,6 @@ class SessionManagerTest extends TestCase
 
     public function testShouldFailAuthenticate()
     {
-        $this->withoutExceptionHandling();
-
         $secret = 'SeCrEt';
         Models\App::create(['app_id' => 'appid', 'secret' => $secret]);
         $token = $this->generateToken();
@@ -122,8 +120,6 @@ class SessionManagerTest extends TestCase
 
     public function testShouldAuthenticate()
     {
-        $this->withoutExceptionHandling();
-
         $secret = 'SeCrEt';
         Models\App::create(['app_id' => 'appid', 'secret' => $secret]);
         $user = Models\User::create([
@@ -145,5 +141,55 @@ class SessionManagerTest extends TestCase
             'success' => true,
             'user' => $user->toArray()
         ]);
+    }
+
+    public function testShouldFailReturnUserProfile()
+    {
+        $this->withoutExceptionHandling();
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Unauthorized');
+
+        $secret = 'SeCrEt';
+        Models\App::create(['app_id' => 'appid', 'secret' => $secret]);
+        $user = Models\User::create([
+            'username' => 'admin', 'email' => 'admin@admin.com',
+            'password' => bcrypt('secret')
+        ]);
+
+        $token = $this->generateToken();
+        $sid   = $this->generateSessionId('appid', $token, $secret);
+        $checksum = hash('sha256', 'attach' . $token . $secret);
+
+        $response = $this->post('/sso/server/profile', [
+            'access_token' => $sid
+        ]);
+    }
+    
+    public function testShouldReturnUserProfile()
+    {
+        $this->withoutExceptionHandling();
+
+        $secret = 'SeCrEt';
+        Models\App::create(['app_id' => 'appid', 'secret' => $secret]);
+        $user = Models\User::create([
+            'username' => 'admin', 'email' => 'admin@admin.com',
+            'password' => bcrypt('secret')
+        ]);
+
+        $token = $this->generateToken();
+        $sid   = $this->generateSessionId('appid', $token, $secret);
+        $checksum = hash('sha256', 'attach' . $token . $secret);
+
+        $this->post('/sso/server/login', [
+            'access_token' => $sid,
+            'email' => 'admin@admin.com', 'password' => 'secret'
+        ]);
+
+        $response = $this->post('/sso/server/profile', [
+            'access_token' => $sid
+        ]);
+
+        $response->assertOk();
+        $response->assertJson($user->toArray());
     }
 }
