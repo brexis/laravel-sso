@@ -3,7 +3,7 @@
 namespace Brexis\LaravelSSO\Http\Middleware;
 
 use Closure;
-use Brexis\LaravelSSO\BrokerManager;
+use Brexis\LaravelSSO\ServerBrokerManager;
 use Brexis\LaravelSSO\SessionManager;
 use Brexis\LaravelSSO\Exceptions\UnauthorizedException;
 
@@ -15,7 +15,7 @@ class Authenticate
 
     protected $session;
 
-    public function __construct(BrokerManager $broker, SessionManager $session)
+    public function __construct(ServerBrokerManager$broker, SessionManager $session)
     {
         $this->broker = $broker;
         $this->session = $session;

@@ -2,7 +2,7 @@
 
 namespace Brexis\LaravelSSO\Test;
 
-use Brexis\LaravelSSO\BrokerManager;
+use Brexis\LaravelSSO\ServerBrokerManager;
 use Brexis\LaravelSSO\SessionManager;
 use Brexis\LaravelSSO\Exceptions\UnauthorizedException;
 use Brexis\LaravelSSO\Exceptions\NotAttachedException;
@@ -23,7 +23,7 @@ class ServerControllerTest extends TestCase
     {
         parent::setUp();
 
-        $this->broker = new BrokerManager;
+        $this->broker = new ServerBrokerManager;
         $this->session = new SessionManager;
 
         $this->app['config']->set('auth.providers.users.model', Models\User::class);
@@ -34,7 +34,7 @@ class ServerControllerTest extends TestCase
 
     public function testShouldThrownExceptionIfParamsAreNotDefined()
     {
-        $response = $this->post('/sso/server/attach', []);
+        $response = $this->get('/sso/server/attach', []);
 
         $response->assertStatus(400);
         $response->assertSee('The broker field is required');
@@ -45,9 +45,10 @@ class ServerControllerTest extends TestCase
     public function testShouldThrownExceptionIfReturnUrlIsNotDefined()
     {
         Models\App::create(['app_id' => 'appid', 'secret' => 'SeCrEt']);
-        $response = $this->post('/sso/server/attach', [
+        $query = http_build_query([
             'broker' => 'appid', 'token' => 'token', 'checksum' => 'checksum'
         ]);
+        $response = $this->get('/sso/server/attach?' . $query);
 
         $response->assertStatus(400);
         $response->assertSee('No return url specified');
@@ -56,10 +57,11 @@ class ServerControllerTest extends TestCase
     public function testShouldThrownExceptionIfChecksumIsInvalid()
     {
         Models\App::create(['app_id' => 'appid', 'secret' => 'SeCrEt']);
-        $response = $this->post('/sso/server/attach', [
+        $query = http_build_query([
             'broker' => 'appid', 'token' => 'token',
             'return_url' => 'http://localhost', 'checksum' => 'checksum',
         ]);
+        $response = $this->get('/sso/server/attach?' . $query);
 
         $response->assertStatus(400);
         $response->assertSee('Invalid checksum');
@@ -74,27 +76,30 @@ class ServerControllerTest extends TestCase
         $checksum = hash('sha256', 'attach' . $token . $secret);
 
         // With redirect
-        $response = $this->post('/sso/server/attach', [
+        $query = http_build_query([
             'broker' => 'appid', 'token' => $token,
             'checksum' => $checksum, 'return_url' => 'http://localhost'
         ]);
+        $response = $this->get('/sso/server/attach?' .$query);
 
         $response->assertRedirect('http://localhost');
         $this->assertEquals($this->session->get($sid), '{}');
 
         // With callback
-        $response = $this->post('/sso/server/attach', [
+        $query = http_build_query([
             'broker' => 'appid', 'token' => $token,
             'checksum' => $checksum, 'callback' => 'apply_callback'
         ]);
+        $response = $this->get('/sso/server/attach?'. $query);
 
         $response->assertOk();
         $response->assertSee('apply_callback({"success":"attached"}, 200)');
 
         // With json
-        $response = $this->json('post', '/sso/server/attach', [
+        $query = http_build_query([
             'broker' => 'appid', 'token' => $token, 'checksum' => $checksum
         ]);
+        $response = $this->json('get', '/sso/server/attach?'. $query);
 
         $response->assertOk();
         $response->assertJson(['success' => 'attached']);
@@ -127,9 +132,10 @@ class ServerControllerTest extends TestCase
         $sid   = $this->generateSessionId('appid', $token, $secret);
         $checksum = hash('sha256', 'attach' . $token . $secret);
 
-        $this->json('post', '/sso/server/attach', [
-            'broker' => 'appid', 'token' => $token, 'checksum' => $checksum
+        $query = http_build_query([
+            'broker' => 'appid', 'token' => $token, 'checksum' => $checksum,
         ]);
+        $response = $this->json('GET', '/sso/server/attach?'. $query);
 
         $response = $this->post('/sso/server/login', [
             'access_token' => $sid,
@@ -153,9 +159,10 @@ class ServerControllerTest extends TestCase
         $sid   = $this->generateSessionId('appid', $token, $secret);
         $checksum = hash('sha256', 'attach' . $token . $secret);
 
-        $this->json('post', '/sso/server/attach', [
+        $query = http_build_query([
             'broker' => 'appid', 'token' => $token, 'checksum' => $checksum
         ]);
+        $this->json('GET', '/sso/server/attach?'. $query);
 
         $response = $this->post('/sso/server/login', [
             'access_token' => $sid,
@@ -186,9 +193,7 @@ class ServerControllerTest extends TestCase
         $sid   = $this->generateSessionId('appid', $token, $secret);
         $checksum = hash('sha256', 'attach' . $token . $secret);
 
-        $response = $this->post('/sso/server/profile', [
-            'access_token' => $sid
-        ]);
+        $response = $this->get('/sso/server/profile?access_token=' .$sid);
     }
 
     public function testShouldReturnUserProfile()
@@ -206,19 +211,17 @@ class ServerControllerTest extends TestCase
         $sid   = $this->generateSessionId('appid', $token, $secret);
         $checksum = hash('sha256', 'attach' . $token . $secret);
 
-
-        $this->json('post', '/sso/server/attach', [
+        $query = http_build_query([
             'broker' => 'appid', 'token' => $token, 'checksum' => $checksum
         ]);
+        $this->json('GET', '/sso/server/attach?'. $query);
 
-        $this->post('/sso/server/login', [
+        $response = $this->post('/sso/server/login', [
             'access_token' => $sid,
             'email' => 'admin@admin.com', 'password' => 'secret'
         ]);
 
-        $response = $this->post('/sso/server/profile', [
-            'access_token' => $sid
-        ]);
+        $response = $this->get('/sso/server/profile?access_token=' .$sid);
 
         $response->assertOk();
         $response->assertJson($user->toArray());

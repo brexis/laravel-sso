@@ -3,13 +3,13 @@
 namespace Brexis\LaravelSSO\Http\Middleware;
 
 use Closure;
-use Brexis\LaravelSSO\BrokerManager;
+use Brexis\LaravelSSO\ServerBrokerManager;
 
 class ValidateBroker
 {
     protected $broker;
 
-    public function __construct(BrokerManager $broker)
+    public function __construct(ServerBrokerManager$broker)
     {
         $this->broker = $broker;
     }

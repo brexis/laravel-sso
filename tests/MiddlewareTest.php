@@ -2,7 +2,7 @@
 
 namespace Brexis\LaravelSSO\Test;
 
-use Brexis\LaravelSSO\BrokerManager;
+use Brexis\LaravelSSO\ServerBrokerManager;
 use Brexis\LaravelSSO\SessionManager;
 use Brexis\LaravelSSO\Http\Middleware\Authenticate;
 use Brexis\LaravelSSO\Http\Middleware\ValidateBroker;
@@ -26,7 +26,7 @@ class MiddlewareTest extends TestCase
     {
         parent::setUp();
 
-        $this->broker = new BrokerManager;
+        $this->broker = new ServerBrokerManager;
         $this->session = new SessionManager;
 
         $this->authenticateMiddleware = new Authenticate($this->broker, $this->session);

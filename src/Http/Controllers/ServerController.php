@@ -2,7 +2,7 @@
 
 namespace Brexis\LaravelSSO\Http\Controllers;
 
-use Brexis\LaravelSSO\BrokerManager;
+use Brexis\LaravelSSO\ServerBrokerManager;
 use Brexis\LaravelSSO\SessionManager;
 use Brexis\LaravelSSO\Http\Middleware\ValidateBroker;
 use Brexis\LaravelSSO\Http\Middleware\Authenticate;
@@ -23,7 +23,7 @@ class ServerController extends Controller
 
     protected $return_type = null;
 
-    public function __construct(BrokerManager $broker, SessionManager $session)
+    public function __construct(ServerBrokerManager$broker, SessionManager $session)
     {
         $this->middleware(ValidateBroker::class)->except('attach');
         $this->middleware(Authenticate::class)->only('profile');
@@ -32,6 +32,12 @@ class ServerController extends Controller
         $this->session = $session;
     }
 
+    /**
+     * Attach client broker to server
+     *
+     * @param \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
     public function attach(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -66,6 +72,13 @@ class ServerController extends Controller
         return $this->outputAttachSuccess($request);
     }
 
+    /**
+     * Login
+     *
+     * @param \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     * @throw Brexis\LaravelSSO\Exceptions\NotAttachedException
+     */
     public function login(Request $request)
     {
         $sid = $this->broker->getBrokerSessionId($request);
@@ -84,11 +97,28 @@ class ServerController extends Controller
         return response()->json(['success' => false], 401);
     }
 
+    /**
+     * Get user profile
+     *
+     * @param \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
     public function profile()
     {
         return response()->json(
             $this->guard()->user()->toArray()
         );
+    }
+
+    /**
+     * Logout user
+     *
+     * @param \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function logout()
+    {
+        // TODO
     }
 
     protected function detectReturnType(Request $request)
