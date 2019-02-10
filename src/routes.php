@@ -10,5 +10,5 @@ Route::prefix('sso/server')->name('sso.server.')->group(function() {
 });
 
 Route::prefix('sso/client')->name('sso.client.')->group(function() {
-    Route::post('attach', 'Brexis\LaravelSSO\Http\Controllers\ClientController@attach')->name('attach');
+    Route::get('attach', 'Brexis\LaravelSSO\Http\Controllers\ClientController@attach')->name('attach');
 });

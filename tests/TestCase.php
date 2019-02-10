@@ -58,4 +58,36 @@ abstract class TestCase extends OrchestraTestCase
         return "SSO-{$brocer_id}-{$token}-" . hash('sha256', 'session' . $token . $secret);
     }
 
+    public function createMockClient($status, $body = null, $headers = [])
+    {
+        $this->container = [];
+        $history = Middleware::history($this->container);
+        $body = json_encode($body);
+        $response = new Response($status, $headers, $body);
+        $mock = new MockHandler([$response]);
+        $stack = HandlerStack::create($mock);
+        // Add the history middleware to the handler stack.
+        $stack->push($history);
+        $client = new Client(['handler' => $stack]);
+        
+        return $client;
+    }
+
+    protected function exceptRequest($path, $method, $query = null, $body = null)
+    {
+        // Iterate over the requests and responses
+        foreach ($this->container as $transaction) {
+            $request = $transaction['request'];
+            $this->assertEquals($request->getUri()->getPath(), $path);
+            $this->assertEquals($request->getMethod(), $method);
+            if ($query) {
+                parse_str($request->getUri()->getQuery(), $request_query);
+                $this->assertArraySubset($query, $request_query);
+            }
+            if ($body) {
+                $request_body = json_decode($request->getBody()->getContents(), true);
+                $this->assertArraySubset($body, $request_body);
+            }
+        }
+    }
 }

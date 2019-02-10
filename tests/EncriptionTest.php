@@ -25,4 +25,9 @@ class EncriptionTest extends TestCase
 
         $this->assertTrue($this->encription->verifyAttachChecksum('b', 'c', $checksum));
     }
+    
+    public function testShouldGenerateRandonToken()
+    {
+        $this->assertNotEquals($this->encription->randomToken(), $this->encription->randomToken());
+    }
 }

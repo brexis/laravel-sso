@@ -5,7 +5,6 @@ namespace Brexis\LaravelSSO\Test;
 use Brexis\LaravelSSO\ServerBrokerManager;
 use Brexis\LaravelSSO\Exceptions\InvalidSessionIdException;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Contracts\Cache\Store;
 use Illuminate\Http\Request;
 
 class ServerBrokerManagerTest extends TestCase
