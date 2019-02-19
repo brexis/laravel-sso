@@ -34,6 +34,14 @@ class SessionManagerTest extends TestCase
         $this->session->set('session_id', 'value');
     }
 
+    public function testShouldForgetSessionInCache()
+    {
+        $this->session->set('session_id', 'value');
+        $this->session->forget('session_id');
+
+        $this->assertNull($this->session->get('session_id'));
+    }
+
     public function testShouldSartSession()
     {
         $this->session->start('session_id');

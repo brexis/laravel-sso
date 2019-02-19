@@ -190,4 +190,14 @@ class ClientBrokerManager
 
         return $this->requestor->request($sid, 'GET', $url);
     }
+
+    public function logout()
+    {
+        $url   = $this->serverUrl('/logout');
+        $token = $this->getClientToken();
+        $sid   = $this->sessionId($token);
+
+        $response = $this->requestor->request($sid, 'POST', $url);
+        return $response['success'] === true;
+    }
 }
