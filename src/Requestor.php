@@ -19,6 +19,16 @@ class Requestor
     }
 
     /**
+     * Check if debug mode is enabled
+     *
+     * @return bool
+     */
+    public function debugEnabled()
+    {
+        return config('laravel-sso.debug') === true;
+    }
+
+    /**
      * Generate new checksum
      *
      * @param string $type
@@ -37,11 +47,14 @@ class Requestor
                     'Accept' => 'application/json'
                 ]
             ]);
+
+            return json_decode($response->getBody()->getContents(), true);
         } catch (RequestException $e) {
-            dump(Psr7\str($e->getRequest()));
-            if ($e->hasResponse()) {
-                dd(Psr7\str($e->getResponse()));
+            if ($this->debugEnabled()) {
+                throw $e;
             }
+
+            return false;
         }
     }
 }

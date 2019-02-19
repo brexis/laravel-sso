@@ -117,14 +117,14 @@ class ClientBrokerManagerTest extends TestCase
         $this->app['config']->set('laravel-sso.broker_client_secret', 'app_secret');
         $this->app['config']->set('laravel-sso.broker_server_url', 'http://localhost/sso/server');
 
-        $client = $this->mockHttpClient(200);
+        $client = $this->mockHttpClient(200, ['success' => true]);
 
         $broker = new ClientBrokerManager($client);
         $token = $broker->generateClientToken();
         $broker->saveClientToken($token);
         $sid = $broker->sessionId($token);
 
-        $broker->login(['username' => 'admin', 'password' => 'secret']);
+        $this->assertTrue($broker->login(['username' => 'admin', 'password' => 'secret']));
 
         $this->exceptHttpRequest('/sso/server/login', 'POST', [
             'Authorization' => ['Bearer ' . $sid],
