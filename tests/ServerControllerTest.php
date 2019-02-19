@@ -34,12 +34,12 @@ class ServerControllerTest extends TestCase
 
     public function testShouldThrownExceptionIfParamsAreNotDefined()
     {
-        $response = $this->get('/sso/server/attach', []);
+        $this->get('/sso/server/attach', []);
 
-        $response->assertStatus(400);
-        $response->assertSee('The broker field is required');
-        $response->assertSee('The token field is required');
-        $response->assertSee('The checksum field is required');
+        $this->assertResponseStatus(400);
+        $this->see('The broker field is required');
+        $this->see('The token field is required');
+        $this->see('The checksum field is required');
     }
 
     public function testShouldThrownExceptionIfReturnUrlIsNotDefined()
@@ -48,10 +48,10 @@ class ServerControllerTest extends TestCase
         $query = http_build_query([
             'broker' => 'appid', 'token' => 'token', 'checksum' => 'checksum'
         ]);
-        $response = $this->get('/sso/server/attach?' . $query);
+        $this->get('/sso/server/attach?' . $query);
 
-        $response->assertStatus(400);
-        $response->assertSee('No return url specified');
+        $this->assertResponseStatus(400);
+        $this->see('No return url specified');
     }
 
     public function testShouldThrownExceptionIfChecksumIsInvalid()
@@ -61,10 +61,10 @@ class ServerControllerTest extends TestCase
             'broker' => 'appid', 'token' => 'token',
             'return_url' => 'http://localhost', 'checksum' => 'checksum',
         ]);
-        $response = $this->get('/sso/server/attach?' . $query);
+        $this->get('/sso/server/attach?' . $query);
 
-        $response->assertStatus(400);
-        $response->assertSee('Invalid checksum');
+        $this->assertResponseStatus(400);
+        $this->see('Invalid checksum');
     }
 
     public function testShouldAttachTheBrocker()
@@ -80,9 +80,9 @@ class ServerControllerTest extends TestCase
             'broker' => 'appid', 'token' => $token,
             'checksum' => $checksum, 'return_url' => 'http://localhost'
         ]);
-        $response = $this->get('/sso/server/attach?' .$query);
+        $this->get('/sso/server/attach?' .$query);
 
-        $response->assertRedirect('http://localhost');
+        $this->assertRedirectedTo('http://localhost');
         $this->assertEquals($this->session->get($sid), '{}');
 
         // With callback
@@ -90,27 +90,23 @@ class ServerControllerTest extends TestCase
             'broker' => 'appid', 'token' => $token,
             'checksum' => $checksum, 'callback' => 'apply_callback'
         ]);
-        $response = $this->get('/sso/server/attach?'. $query);
+        $this->get('/sso/server/attach?'. $query);
 
-        $response->assertOk();
-        $response->assertSee('apply_callback({"success":"attached"}, 200)');
+        $this->assertResponseOk();
+        $this->see('apply_callback({"success":"attached"}, 200)');
 
         // With json
         $query = http_build_query([
             'broker' => 'appid', 'token' => $token, 'checksum' => $checksum
         ]);
-        $response = $this->json('get', '/sso/server/attach?'. $query);
+        $this->json('get', '/sso/server/attach?'. $query);
 
-        $response->assertOk();
-        $response->assertJson(['success' => 'attached']);
+        $this->assertResponseOk();
+        $this->seeJson(['success' => 'attached']);
     }
 
     public function testShouldFailAuthenticateWithoutAttached()
     {
-        $this->withoutExceptionHandling();
-        $this->expectException(NotAttachedException::class);
-        $this->expectExceptionMessage('Client broker not attached.');
-
         $secret = 'SeCrEt';
         Models\App::create(['app_id' => 'appid', 'secret' => $secret]);
         $token = $this->generateToken();
@@ -118,10 +114,13 @@ class ServerControllerTest extends TestCase
         $checksum = hash('sha256', 'attach' . $token . $secret);
 
         // With redirect
-        $response = $this->post('/sso/server/login', [
+        $this->post('/sso/server/login', [
             'access_token' => $sid,
             'email' => 'admin@admin.com', 'password' => 'secret'
         ]);
+
+        $this->assertTrue($this->response->exception instanceof NotAttachedException);
+        $this->assertEquals($this->response->exception->getMessage(), 'Client broker not attached.');
     }
 
     public function testShouldFailAuthenticate()
@@ -142,8 +141,8 @@ class ServerControllerTest extends TestCase
             'email' => 'admin@admin.com', 'password' => 'secret'
         ]);
 
-        $response->assertStatus(401);
-        $response->assertJson(['success' => false]);
+        $this->assertResponseStatus(401);
+        $this->seeJson(['success' => false]);
     }
 
     public function testShouldAuthenticateWithEmail()
@@ -169,8 +168,8 @@ class ServerControllerTest extends TestCase
             'email' => 'admin@admin.com', 'password' => 'secret'
         ]);
 
-        $response->assertOk();
-        $response->assertJson([
+        $this->assertResponseOk();
+        $this->seeJson([
             'success' => true,
             'user' => $user->toArray()
         ]);
@@ -208,10 +207,6 @@ class ServerControllerTest extends TestCase
 
     public function testShouldFailReturnUserProfile()
     {
-        $this->withoutExceptionHandling();
-        $this->expectException(UnauthorizedException::class);
-        $this->expectExceptionMessage('Unauthorized');
-
         $secret = 'SeCrEt';
         Models\App::create(['app_id' => 'appid', 'secret' => $secret]);
         $user = Models\User::create([
@@ -223,7 +218,10 @@ class ServerControllerTest extends TestCase
         $sid   = $this->generateSessionId('appid', $token, $secret);
         $checksum = hash('sha256', 'attach' . $token . $secret);
 
-        $response = $this->get('/sso/server/profile?access_token=' .$sid);
+        $this->get('/sso/server/profile?access_token=' .$sid);
+
+        $this->assertTrue($this->response->exception instanceof UnauthorizedException);
+        $this->assertEquals($this->response->exception->getMessage(), 'Unauthorized');
     }
 
     public function testShouldReturnUserProfile()
@@ -251,13 +249,12 @@ class ServerControllerTest extends TestCase
 
         $response = $this->get('/sso/server/profile?access_token=' .$sid);
 
-        $response->assertOk();
-        $response->assertJson($user->toArray());
+        $this->assertResponseOk();
+        $this->seeJson($user->toArray());
     }
 
     public function testShouldLogoutUser()
     {
-        $this->withoutExceptionHandling();
         $this->expectException(UnauthorizedException::class);
         $this->expectExceptionMessage('Unauthorized');
 
@@ -282,8 +279,5 @@ class ServerControllerTest extends TestCase
         ]);
 
         $response = $this->get('/sso/server/profile?access_token=' .$sid);
-
-        $response->assertOk();
-        $response->assertJson($user->toArray());
     }
 }
