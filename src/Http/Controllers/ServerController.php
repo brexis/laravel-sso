@@ -90,7 +90,7 @@ class ServerController extends Controller
         if ($this->authenticate($request, $this)) {
             return response()->json([
                 'success' => true,
-                'user' => $this->userInfo($this->sessionValue($request))
+                'user' => $this->userInfo($request)
             ]);
         }
 
