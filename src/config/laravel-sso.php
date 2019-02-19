@@ -53,4 +53,9 @@ return [
      * Session live time Default to 60 minutes. Set to null to store forever
      */
     'session_ttl' => 60,
+
+    /**
+     * Enable debug mode
+     */
+    'debug' => false
 ];
