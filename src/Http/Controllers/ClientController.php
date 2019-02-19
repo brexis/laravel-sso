@@ -44,9 +44,7 @@ class ClientController extends Controller
     protected function generateNewToken()
     {
         $token = $this->broker->generateClientToken();
-        $key   = $this->broker->sessionName();
-
-        $this->session->set($key, $token);
+        $this->broker->saveClientToken($token);
 
         return $token;
     }

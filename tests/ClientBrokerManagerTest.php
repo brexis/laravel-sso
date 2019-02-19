@@ -121,9 +121,10 @@ class ClientBrokerManagerTest extends TestCase
 
         $broker = new ClientBrokerManager($client);
         $token = $broker->generateClientToken();
+        $broker->saveClientToken($token);
         $sid = $broker->sessionId($token);
 
-        $broker->login($token, ['username' => 'admin', 'password' => 'secret']);
+        $broker->login(['username' => 'admin', 'password' => 'secret']);
 
         $this->exceptHttpRequest('/sso/server/login', 'POST', [
             'Authorization' => ['Bearer ' . $sid],
@@ -141,9 +142,10 @@ class ClientBrokerManagerTest extends TestCase
 
         $broker = new ClientBrokerManager($client);
         $token = $broker->generateClientToken();
+        $broker->saveClientToken($token);
         $sid = $broker->sessionId($token);
 
-        $broker->profile($token);
+        $broker->profile();
 
         $this->exceptHttpRequest('/sso/server/profile', 'GET', [
             'Authorization' => ['Bearer ' . $sid],

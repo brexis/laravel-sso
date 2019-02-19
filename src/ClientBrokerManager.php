@@ -3,7 +3,6 @@
 namespace Brexis\LaravelSSO;
 
 use Brexis\LaravelSSO\Exceptions\InvalidClientException;
-use Brexis\LaravelSSO\Encription;
 
 /**
  * Class ClientBrokerManager
@@ -15,9 +14,20 @@ class ClientBrokerManager
      */
     protected $encription;
 
+    /**
+     * @var Brexis\LaravelSSO\SessionManager
+     */
+    protected $session;
+
+    /**
+     * @var Brexis\LaravelSSO\Requestor
+     */
+    protected $requestor;
+
     public function __construct($httpClient = null)
     {
         $this->encription = new Encription;
+        $this->session = new SessionManager;
         $this->requestor = new Requestor($httpClient);
     }
 
@@ -84,11 +94,33 @@ class ClientBrokerManager
     /**
      * Generate an unique session token
      *
-     * @return
+     * @return string
      */
     public function generateClientToken()
     {
         return $this->encription->randomToken();
+    }
+
+    /**
+     * Save session token
+     */
+    public function saveClientToken($token)
+    {
+        $key = $this->sessionName();
+
+        $this->session->set($key, $token);
+    }
+
+    /**
+     * Return session token
+     *
+     * @return string
+     */
+    public function getClientToken()
+    {
+        $key = $this->sessionName();
+
+        return $this->session->get($key);
     }
 
     /**
@@ -129,18 +161,20 @@ class ClientBrokerManager
         );
     }
 
-    public function login($token, $credentials)
+    public function login($credentials)
     {
-        $url = $this->serverUrl('/login');
-        $sid = $this->sessionId($token);
+        $url   = $this->serverUrl('/login');
+        $token = $this->getClientToken();
+        $sid   = $this->sessionId($token);
 
         return $this->requestor->request($sid, 'POST', $url, $credentials);
     }
 
-    public function profile($token)
+    public function profile()
     {
-        $url = $this->serverUrl('/profile');
-        $sid = $this->sessionId($token);
+        $url   = $this->serverUrl('/profile');
+        $token = $this->getClientToken();
+        $sid   = $this->sessionId($token);
 
         return $this->requestor->request($sid, 'GET', $url);
     }
