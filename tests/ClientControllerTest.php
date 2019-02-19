@@ -41,8 +41,6 @@ class ClientControllerTest extends TestCase
      */
     public function testShouldAttachClientToServer()
     {
-        $this->withoutExceptionHandling();
-
         $token = 'emnxnx465ugcgsgk4gw0c888w';
 
         $encr = Mockery::mock('overload:Brexis\LaravelSSO\Encription')->makePartial();
@@ -57,7 +55,7 @@ class ClientControllerTest extends TestCase
         $key = $broker->sessionName();
         $checksum = $broker->generateAttachChecksum($token);
 
-        $response = $this->get('/sso/client/attach?return_url=http://localhost');
+        $this->get('/sso/client/attach?return_url=http://localhost');
         $redirect_url = '/sso/server/attach?' . http_build_query([
             'broker' => $broker->clientId(),
             'token' => $token,
@@ -65,16 +63,16 @@ class ClientControllerTest extends TestCase
             'return_url'=> 'http://localhost'
         ]);
 
-        $response->assertRedirect('http://localhost' . $redirect_url);
+        $this->assertRedirectedTo('http://localhost' . $redirect_url);
         $this->assertEquals(Cache::get($key), $token);
 
         // Testing Server attach
         Models\App::create(['app_id' => 'appid', 'secret' => 'SeCrEt']);
         $sid = $this->generateSessionId('appid', $token, 'SeCrEt');
 
-        $response = $this->get($redirect_url);
+        $this->get($redirect_url);
 
-        $response->assertRedirect('http://localhost');
+        $this->assertRedirectedTo('http://localhost');
         $this->assertEquals($session->get($sid), '{}');
     }
 }
