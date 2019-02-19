@@ -134,6 +134,16 @@ class ClientBrokerManager
     }
 
     /**
+     * Check if session is attached
+     *
+     * @return bool
+     */
+    public function isAttached()
+    {
+        return !is_null($this->getClientToken());
+    }
+
+    /**
      * Return the session id
      *
      * @param string $token The client generated token
