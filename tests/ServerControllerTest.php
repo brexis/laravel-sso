@@ -193,13 +193,13 @@ class ServerControllerTest extends TestCase
         ]);
         $this->json('GET', '/sso/server/attach?'. $query);
 
-        $response = $this->post('/sso/server/login', [
+        $this->post('/sso/server/login', [
             'access_token' => $sid,
             'username' => 'admin', 'password' => 'secret', 'login' => 'username'
         ]);
 
-        $response->assertOk();
-        $response->assertJson([
+        $this->assertResponseOk();
+        $this->seeJson([
             'success' => true,
             'user' => $user->toArray()
         ]);
@@ -255,9 +255,6 @@ class ServerControllerTest extends TestCase
 
     public function testShouldLogoutUser()
     {
-        $this->expectException(UnauthorizedException::class);
-        $this->expectExceptionMessage('Unauthorized');
-
         $secret = 'SeCrEt';
         Models\App::create(['app_id' => 'appid', 'secret' => $secret]);
         $user = Models\User::create([
@@ -274,10 +271,13 @@ class ServerControllerTest extends TestCase
         ]);
         $this->json('GET', '/sso/server/attach?'. $query);
 
-        $response = $this->post('/sso/server/logout', [
+        $this->post('/sso/server/logout', [
             'access_token' => $sid
         ]);
 
-        $response = $this->get('/sso/server/profile?access_token=' .$sid);
+        $this->get('/sso/server/profile?access_token=' .$sid);
+
+        $this->assertTrue($this->response->exception instanceof UnauthorizedException);
+        $this->assertEquals($this->response->exception->getMessage(), 'Unauthorized');
     }
 }
