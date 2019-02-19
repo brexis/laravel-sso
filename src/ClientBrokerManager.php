@@ -177,7 +177,9 @@ class ClientBrokerManager
         $token = $this->getClientToken();
         $sid   = $this->sessionId($token);
 
-        return $this->requestor->request($sid, 'POST', $url, $credentials);
+        $response = $this->requestor->request($sid, 'POST', $url, $credentials);
+
+        return $response['success'] === true;
     }
 
     public function profile()
