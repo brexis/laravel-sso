@@ -146,7 +146,7 @@ class ServerControllerTest extends TestCase
         $response->assertJson(['success' => false]);
     }
 
-    public function testShouldAuthenticate()
+    public function testShouldAuthenticateWithEmail()
     {
         $secret = 'SeCrEt';
         Models\App::create(['app_id' => 'appid', 'secret' => $secret]);
@@ -167,6 +167,36 @@ class ServerControllerTest extends TestCase
         $response = $this->post('/sso/server/login', [
             'access_token' => $sid,
             'email' => 'admin@admin.com', 'password' => 'secret'
+        ]);
+
+        $response->assertOk();
+        $response->assertJson([
+            'success' => true,
+            'user' => $user->toArray()
+        ]);
+    }
+
+    public function testShouldAuthenticateWithUsername()
+    {
+        $secret = 'SeCrEt';
+        Models\App::create(['app_id' => 'appid', 'secret' => $secret]);
+        $user = Models\User::create([
+            'username' => 'admin', 'email' => 'admin@admin.com',
+            'password' => bcrypt('secret')
+        ]);
+
+        $token = $this->generateToken();
+        $sid   = $this->generateSessionId('appid', $token, $secret);
+        $checksum = hash('sha256', 'attach' . $token . $secret);
+
+        $query = http_build_query([
+            'broker' => 'appid', 'token' => $token, 'checksum' => $checksum
+        ]);
+        $this->json('GET', '/sso/server/attach?'. $query);
+
+        $response = $this->post('/sso/server/login', [
+            'access_token' => $sid,
+            'username' => 'admin', 'password' => 'secret', 'login' => 'username'
         ]);
 
         $response->assertOk();
