@@ -255,7 +255,6 @@ class ServerControllerTest extends TestCase
 
     public function testShouldLogoutUser()
     {
-        $this->withoutExceptionHandling();
         $this->expectException(UnauthorizedException::class);
         $this->expectExceptionMessage('Unauthorized');
 
@@ -280,8 +279,5 @@ class ServerControllerTest extends TestCase
         ]);
 
         $response = $this->get('/sso/server/profile?access_token=' .$sid);
-
-        $response->assertOk();
-        $response->assertJson($user->toArray());
     }
 }
