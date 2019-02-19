@@ -11,11 +11,9 @@ trait AuthenticateUsers
     {
         if ($this->attemptLogin($request)) {
             $sid = $this->broker->getBrokerSessionId($request);
-            $session_value = json_encode([
-                $this->username() => $this->sessionValue($request)
-            ]);
+            $credentials = json_encode($this->sessionCredentials($request));
 
-            $this->session->set($sid, $session_value, $request->has('remember'));
+            $this->session->set($sid, $credentials, $request->has('remember'));
 
             return true;
         }
@@ -26,23 +24,26 @@ trait AuthenticateUsers
     protected function attemptLogin(Request $request)
     {
         return $this->guard()->once(
-            $this->credentials($request)
+            $this->loginCredentials($request)
         );
     }
 
-    protected function credentials(Request $request)
+    protected function loginCredentials(Request $request)
     {
-        return $request->only($this->username(), 'password');
+        return $request->only($this->username($request), 'password');
     }
 
-    protected function username()
+    protected function username($request)
     {
-        return 'email';
+        return $request->input('login', 'email');
     }
 
-    protected function sessionValue(Request $request)
+    protected function sessionCredentials(Request $request)
     {
-        return $request->input($this->username());
+        $field = $this->username($request);
+        $value = $request->input($field);
+
+        return [$field => $value];
     }
 
     protected function guard()
@@ -50,13 +51,13 @@ trait AuthenticateUsers
         return Auth::guard();
     }
 
-    protected function userInfo($username)
+    protected function userInfo($request)
     {
+        $credentials = $this->sessionCredentials($request);
+
         return $this->guard()
                     ->getProvider()
-                    ->retrieveByCredentials([
-                        $this->username() => $username
-                    ])
+                    ->retrieveByCredentials($credentials)
                     ->toArray();
     }
 }
