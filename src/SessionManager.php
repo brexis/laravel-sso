@@ -50,6 +50,14 @@ class SessionManager
     }
 
     /**
+     * Delete session value of the key $key
+     */
+    public function forget($key)
+    {
+        Cache::forget($key);
+    }
+
+    /**
      * Start a new session by resetting the session value
      */
     public function start($sid)

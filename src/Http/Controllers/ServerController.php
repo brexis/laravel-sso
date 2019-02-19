@@ -116,9 +116,13 @@ class ServerController extends Controller
      * @param \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function logout()
+    public function logout(Request $request)
     {
-        // TODO
+        $sid = $this->broker->getBrokerSessionId($request);
+
+        $this->session->get($sid);
+
+        return response()->json(['success' => true]);
     }
 
     protected function detectReturnType(Request $request)

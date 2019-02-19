@@ -132,7 +132,7 @@ class ClientBrokerManagerTest extends TestCase
         ], null, ['username' => 'admin', 'password' => 'secret']);
     }
 
-    public function testShouldSendProfileRequest()
+    public function testShouldSendLogoutRequest()
     {
         $this->app['config']->set('laravel-sso.broker_client_id', 'app_id');
         $this->app['config']->set('laravel-sso.broker_client_secret', 'app_secret');
@@ -148,6 +148,27 @@ class ClientBrokerManagerTest extends TestCase
         $broker->profile();
 
         $this->exceptHttpRequest('/sso/server/profile', 'GET', [
+            'Authorization' => ['Bearer ' . $sid],
+            'Accept' => ['application/json']
+        ]);
+    }
+
+    public function testShouldSendProfileRequest()
+    {
+        $this->app['config']->set('laravel-sso.broker_client_id', 'app_id');
+        $this->app['config']->set('laravel-sso.broker_client_secret', 'app_secret');
+        $this->app['config']->set('laravel-sso.broker_server_url', 'http://localhost/sso/server');
+
+        $client = $this->mockHttpClient(200, ['success' => true]);
+
+        $broker = new ClientBrokerManager($client);
+        $token = $broker->generateClientToken();
+        $broker->saveClientToken($token);
+        $sid = $broker->sessionId($token);
+
+        $this->assertTrue($broker->logout());
+
+        $this->exceptHttpRequest('/sso/server/logout', 'POST', [
             'Authorization' => ['Bearer ' . $sid],
             'Accept' => ['application/json']
         ]);
