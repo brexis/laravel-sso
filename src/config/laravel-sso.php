@@ -55,6 +55,11 @@ return [
     'session_ttl' => 60,
 
     /**
+     * Closure that return the user infor from server
+     */
+    'user_info' => null,
+
+    /**
      * Enable debug mode
      */
     'debug' => false

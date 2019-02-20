@@ -51,13 +51,14 @@ trait AuthenticateUsers
         return Auth::guard();
     }
 
-    protected function userInfo($request)
+    protected function userInfo($user)
     {
-        $credentials = $this->sessionCredentials($request);
+        $closure = config('laravel-sso.user_info');
 
-        return $this->guard()
-                    ->getProvider()
-                    ->retrieveByCredentials($credentials)
-                    ->toArray();
+        if (is_callable($closure)) {
+            return $closure($user);
+        }
+
+        return $user->toArray();
     }
 }

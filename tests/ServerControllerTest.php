@@ -253,6 +253,15 @@ class ServerControllerTest extends TestCase
 
         $response->assertOk();
         $response->assertJson($user->toArray());
+
+        $this->app['config']->set('laravel-sso.user_info', function($user) {
+            return ['id' => $user->id];
+        });
+
+        $response = $this->get('/sso/server/profile?access_token=' .$sid);
+
+        $response->assertOk();
+        $response->assertJson(['id' => $user->id]);
     }
 
     public function testShouldLogoutUser()
