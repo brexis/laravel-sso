@@ -88,9 +88,11 @@ class ServerController extends Controller
         }
 
         if ($this->authenticate($request, $this)) {
+            $user = $this->guard()->user();
+
             return response()->json([
                 'success' => true,
-                'user' => $this->userInfo($request)
+                'user' => $this->userInfo($user)
             ]);
         }
 
@@ -105,8 +107,10 @@ class ServerController extends Controller
      */
     public function profile()
     {
+        $user = $this->guard()->user();
+
         return response()->json(
-            $this->guard()->user()->toArray()
+            $this->userInfo($user)
         );
     }
 
