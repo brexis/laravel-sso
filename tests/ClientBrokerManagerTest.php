@@ -124,7 +124,7 @@ class ClientBrokerManagerTest extends TestCase
         $broker->saveClientToken($token);
         $sid = $broker->sessionId($token);
 
-        $this->assertTrue($broker->login(['username' => 'admin', 'password' => 'secret']));
+        $this->assertNotFalse($broker->login(['username' => 'admin', 'password' => 'secret']));
 
         $this->exceptHttpRequest('/sso/server/login', 'POST', [
             'Authorization' => ['Bearer ' . $sid],

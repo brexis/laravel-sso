@@ -24,6 +24,11 @@ class ClientBrokerManager
      */
     protected $requestor;
 
+    /**
+     * Constructor
+     *
+     * @param Brexis\LaravelSSO\Requestor $httpClient
+     */
     public function __construct($httpClient = null)
     {
         $this->encription = new Encription;
@@ -171,17 +176,27 @@ class ClientBrokerManager
         );
     }
 
+    /**
+     * Send login request
+     *
+     * @param array $credentials
+     *
+     * @return bool|array
+     */
     public function login($credentials)
     {
         $url   = $this->serverUrl('/login');
         $token = $this->getClientToken();
         $sid   = $this->sessionId($token);
 
-        $response = $this->requestor->request($sid, 'POST', $url, $credentials);
-
-        return $response['success'] === true;
+        return $this->requestor->request($sid, 'POST', $url, $credentials);
     }
 
+    /**
+     * Send profile request
+     *
+     * @return bool|array
+     */
     public function profile()
     {
         $url   = $this->serverUrl('/profile');
@@ -191,6 +206,11 @@ class ClientBrokerManager
         return $this->requestor->request($sid, 'GET', $url);
     }
 
+    /**
+     * Send logout request
+     *
+     * @return bool
+     */
     public function logout()
     {
         $url   = $this->serverUrl('/logout');

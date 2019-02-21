@@ -13,12 +13,24 @@ class ClientController extends Controller
 
     protected $session;
 
+    /**
+     * Constructor
+     *
+     * @param Brexis\LaravelSSO\ClientBrokerManager $broker
+     * @param Brexis\LaravelSSO\SessionManager $session
+     */
     public function __construct(ClientBrokerManager $broker, SessionManager $session)
     {
         $this->broker = $broker;
         $this->session = $session;
     }
 
+    /**
+     * Attach client to server
+     * @param Illuminate\Http\Request $request
+     *
+     * @return Illuminate\Http\Response
+     */
     public function attach(Request $request)
     {
         $params     = $request->except(['broker', 'token', 'checksum']);
@@ -27,6 +39,12 @@ class ClientController extends Controller
         return redirect()->away($attach_url);
     }
 
+    /**
+     * Return attack url with params
+     * @param array $params
+     *
+     * @return string
+     */
     protected function getAttachUrl($params = [])
     {
         $token = $this->generateNewToken();
@@ -41,6 +59,11 @@ class ClientController extends Controller
         return $this->broker->serverUrl('/attach?' . http_build_query($query));
     }
 
+    /**
+     * Generate new client token
+     *
+     * @return string
+     */
     protected function generateNewToken()
     {
         $token = $this->broker->generateClientToken();

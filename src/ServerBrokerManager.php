@@ -4,8 +4,17 @@ namespace Brexis\LaravelSSO;
 
 use Brexis\LaravelSSO\Exceptions\InvalidSessionIdException;
 
+/**
+ * Class ServerBrokerManager
+ */
 class ServerBrokerManager
 {
+    /**
+     * Return broker model
+     *
+     * @return mixed
+     * @throw \Brexis\LaravelSSO\Exceptions\InvalidSessionIdException
+     */
     public function brokerModel()
     {
         $class = config('laravel-sso.brokers.model');
@@ -17,6 +26,14 @@ class ServerBrokerManager
         return $class;
     }
 
+    /**
+     * Find broker by id
+     *
+     * @param string $sid
+     *
+     * @return mixed
+     * @throw \Brexis\LaravelSSO\Exceptions\InvalidSessionIdException
+     */
     public function findBrokerById($id)
     {
         $class    = $this->brokerModel();
@@ -30,6 +47,14 @@ class ServerBrokerManager
         return $model;
     }
 
+    /**
+     * Find broker secret
+     *
+     * @param string $sid
+     *
+     * @return string
+     * @throw \Brexis\LaravelSSO\Exceptions\InvalidSessionIdException
+     */
     public function findBrokerSecret($model)
     {
         $secret_field = config('laravel-sso.brokers.secret_field');
@@ -37,6 +62,14 @@ class ServerBrokerManager
         return $model->$secret_field;
     }
 
+    /**
+     * Validate broker session id
+     *
+     * @param string $sid
+     *
+     * @return string
+     * @throw \Brexis\LaravelSSO\Exceptions\InvalidSessionIdException
+     */
     public function validateBrokerSessionId($sid)
     {
         $matches = null;
@@ -55,6 +88,14 @@ class ServerBrokerManager
         return $broker_id;
     }
 
+    /**
+     * Generate session id
+     *
+     * @param string $broker_id
+     * @param string $token
+     *
+     * @return string
+     */
     public function generateSessionId($broker_id, $token)
     {
         $model  = $this->findBrokerById($broker_id);
@@ -64,6 +105,14 @@ class ServerBrokerManager
         return "SSO-{$broker_id}-{$token}-" . hash('sha256', 'session' . $token . $secret);
     }
 
+    /**
+     * Generate attach checksum
+     *
+     * @param string $broker_id
+     * @param string $token
+     *
+     * @return string
+     */
     public function generateAttachChecksum($broker_id, $token)
     {
         $model  = $this->findBrokerById($broker_id);
@@ -73,6 +122,11 @@ class ServerBrokerManager
         return hash('sha256', 'attach' . $token . $secret);
     }
 
+    /**
+     * Return boker session id
+     *
+     * @return string
+     */
     public function getBrokerSessionId($request)
     {
         $token = $request->bearerToken();

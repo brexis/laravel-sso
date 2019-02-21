@@ -43,7 +43,11 @@ class SessionManager
 
     /**
      * Return session value of the key $key
-     * @return string
+     *
+     * @return string $key
+     * @return mixed $default
+     * 
+     * @return mixed
      */
     public function get($key, $default = null)
     {
@@ -60,6 +64,8 @@ class SessionManager
 
     /**
      * Set user session data
+     *
+     * @param string $sid
      */
     public function setUserData($sid, $value)
     {
@@ -74,7 +80,7 @@ class SessionManager
 
     /**
      * Retrieve user session data
-     * 
+     *
      * @return string
      */
     public function getUserData($sid)

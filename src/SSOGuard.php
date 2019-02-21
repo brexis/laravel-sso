@@ -41,16 +41,10 @@ class SSOGuard implements Guard
             return $this->user;
         }
 
-        if ($user_data = $this->broker->profile()) {
-            $username = config('laravel-sso.broker_client_username', 'email');
+        if ($payload = $this->broker->profile()) {
+            $this->user = $this->retrieveFromPayload($payload);
 
-            if (!array_key_exists($username, $user_data)) {
-                return false;
-            }
-
-            $this->user = $this->provider->retrieveByCredentials([
-                $username => $user_data[$username]
-            ]);
+            $this->updatePayload($payload);
         }
 
         return $this->user;
@@ -70,14 +64,46 @@ class SSOGuard implements Guard
             $login_params['remember'] = true;
         }
 
-        if ($this->broker->login($login_params)) {
-            $user = $this->provider->retrieveByCredentials($credentials);
+        if ($payload = $this->broker->login($login_params)) {
+            $this->user = $this->retrieveFromPayload($payload);
 
-            $this->user = $user;
-            return true;
+            $this->updatePayload($payload);
+
+            return $this->user;
         }
 
         return false;
+    }
+
+    /**
+     * Retrieve user from payload
+     *
+     * @param mixed $payload
+     * @return mixed
+     */
+    protected function retrieveFromPayload($payload)
+    {
+        $username = config('laravel-sso.broker_client_username', 'email');
+
+        if (!array_key_exists($username, $payload)) {
+            return false;
+        }
+
+        return $this->provider->retrieveByCredentials([
+            $username => $payload[$username]
+        ]);
+    }
+
+    /**
+     * Update user payload
+     *
+     * @param array $payload
+     */
+    protected function updatePayload($payload)
+    {
+        if ($this->user && method_exists($this->user, 'setPayload')) {
+            $this->user->setPayload($payload);
+        }
     }
 
     /**

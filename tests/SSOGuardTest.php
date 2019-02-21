@@ -102,30 +102,36 @@ class SSOGuardTest extends TestCase
 
     public function testShouldAttemptToConnectButFail()
     {
-        $creadentials = ['foo' => 'bar'];
+        $credentials = ['foo' => 'bar'];
         $this->broker->shouldReceive('login')->with([
             'foo' => 'bar',
             'remember' => true
         ])->andReturn(false);
 
-        $this->assertFalse($this->guard->attempt($creadentials, true));
+        $this->assertFalse($this->guard->attempt($credentials, true));
     }
 
     public function testShouldAttemptToConnectAndSucceed()
     {
-        $creadentials = ['email' => 'admin@test.com'];
+        $user = new class {
+            use \Brexis\LaravelSSO\Support\SSOUser;
+            public $id = 1;
+        };
+
+        $credentials = ['email' => 'admin@test.com'];
         $this->broker->shouldReceive('login')->with([
             'email' => 'admin@test.com',
             'remember' => true
-        ])->andReturn(true);
+        ])->andReturn(['email' => 'admin@test.com']);
 
         $this->provider->shouldReceive('retrieveByCredentials')
-             ->with($creadentials)
-             ->andReturn((object) ['id' => 1]);
+             ->with(['email' => 'admin@test.com'])
+             ->andReturn($user);
 
-        $this->assertTrue($this->guard->attempt($creadentials, true));
+        $this->assertNotFalse($this->guard->attempt($credentials, true));
         $this->assertTrue($this->guard->check());
         $this->assertEquals($this->guard->user()->id, 1);
+        $this->assertEquals($this->guard->user()->getPayload(), ['email' => 'admin@test.com']);
     }
 
     public function testShouldLogout()

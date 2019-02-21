@@ -144,7 +144,6 @@ class ServerControllerTest extends TestCase
         ]);
 
         $response->assertStatus(401);
-        $response->assertJson(['success' => false]);
     }
 
     public function testShouldAuthenticateWithEmail()
@@ -171,10 +170,7 @@ class ServerControllerTest extends TestCase
         ]);
 
         $response->assertOk();
-        $response->assertJson([
-            'success' => true,
-            'user' => $user->toArray()
-        ]);
+        $response->assertJson($user->toArray());
     }
 
     public function testShouldAuthenticateWithUsername()
@@ -201,10 +197,7 @@ class ServerControllerTest extends TestCase
         ]);
 
         $response->assertOk();
-        $response->assertJson([
-            'success' => true,
-            'user' => $user->toArray()
-        ]);
+        $response->assertJson($user->toArray());
     }
 
     public function testShouldFailReturnUserProfile()

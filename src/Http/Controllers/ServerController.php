@@ -90,13 +90,10 @@ class ServerController extends Controller
         if ($this->authenticate($request, $this)) {
             $user = $this->guard()->user();
 
-            return response()->json([
-                'success' => true,
-                'user' => $this->userInfo($user)
-            ]);
+            return response()->json($this->userInfo($user));
         }
 
-        return response()->json(['success' => false], 401);
+        return response()->json([], 401);
     }
 
     /**

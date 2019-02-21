@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * SSo Routes
+ */
 Route::middleware('sso-api')->group(function() {
     Route::prefix('sso/server')->name('sso.server.')->group(function() {
         Route::get('attach', 'Brexis\LaravelSSO\Http\Controllers\ServerController@attach')->name('attach');
