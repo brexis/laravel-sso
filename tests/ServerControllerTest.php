@@ -286,13 +286,20 @@ class ServerControllerTest extends TestCase
         ]);
         $this->json('GET', '/sso/server/attach?'. $query);
 
-        $response = $this->post('/sso/server/logout', [
-            'access_token' => $sid
+        $response = $this->post('/sso/server/login', [
+            'access_token' => $sid,
+            'email' => 'admin@admin.com', 'password' => 'secret'
         ]);
 
         $response = $this->get('/sso/server/profile?access_token=' .$sid);
 
         $response->assertOk();
         $response->assertJson($user->toArray());
+
+        $this->post('/sso/server/logout', [
+            'access_token' => $sid
+        ]);
+
+        $this->get('/sso/server/profile?access_token=' .$sid);
     }
 }

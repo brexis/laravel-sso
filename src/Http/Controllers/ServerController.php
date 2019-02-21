@@ -124,7 +124,7 @@ class ServerController extends Controller
     {
         $sid = $this->broker->getBrokerSessionId($request);
 
-        $this->session->get($sid);
+        $this->session->forget($sid);
 
         return response()->json(['success' => true]);
     }
