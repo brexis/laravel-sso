@@ -1,6 +1,6 @@
 <?php
 
-namespace Brexis\LaravelSSO\Support;
+namespace Brexis\LaravelSSO\Traits;
 
 /**
  * SSOUser trait

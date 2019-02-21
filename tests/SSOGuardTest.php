@@ -114,7 +114,7 @@ class SSOGuardTest extends TestCase
     public function testShouldAttemptToConnectAndSucceed()
     {
         $user = new class {
-            use \Brexis\LaravelSSO\Support\SSOUser;
+            use \Brexis\LaravelSSO\Traits\SSOUser;
             public $id = 1;
         };
 
