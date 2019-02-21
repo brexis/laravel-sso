@@ -13,7 +13,8 @@ trait AuthenticateUsers
             $sid = $this->broker->getBrokerSessionId($request);
             $credentials = json_encode($this->sessionCredentials($request));
 
-            $this->session->set($sid, $credentials, $request->has('remember'));
+            // TODO Manage to use remember $request->has('remember')
+            $this->session->setUserData($sid, $credentials);
 
             return true;
         }

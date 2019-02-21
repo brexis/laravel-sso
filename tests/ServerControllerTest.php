@@ -8,6 +8,7 @@ use Brexis\LaravelSSO\Exceptions\UnauthorizedException;
 use Brexis\LaravelSSO\Exceptions\NotAttachedException;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Session;
 
 class ServerControllerTest extends TestCase
 {
@@ -83,7 +84,7 @@ class ServerControllerTest extends TestCase
         $response = $this->get('/sso/server/attach?' .$query);
 
         $response->assertRedirect('http://localhost');
-        $this->assertEquals($this->session->get($sid), '{}');
+        $this->assertEquals($this->session->get($sid), Session::getId());
 
         // With callback
         $query = http_build_query([

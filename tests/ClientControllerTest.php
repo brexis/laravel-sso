@@ -7,6 +7,7 @@ use Brexis\LaravelSSO\SessionManager;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Session;
 use Mockery;
 
 /*class MockEncryption extends \Brexis\LaravelSSO\Encription
@@ -75,6 +76,6 @@ class ClientControllerTest extends TestCase
         $response = $this->get($redirect_url);
 
         $response->assertRedirect('http://localhost');
-        $this->assertEquals($session->get($sid), '{}');
+        $this->assertEquals($session->get($sid), Session::getId());
     }
 }

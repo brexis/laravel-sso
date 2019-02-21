@@ -26,7 +26,7 @@ class ServerController extends Controller
     public function __construct(ServerBrokerManager$broker, SessionManager $session)
     {
         $this->middleware(ValidateBroker::class)->except('attach');
-        $this->middleware(ServerAuthenticate::class)->only('profile');
+        $this->middleware(ServerAuthenticate::class)->only(['profile', 'logout']);
 
         $this->broker = $broker;
         $this->session = $session;
@@ -124,7 +124,7 @@ class ServerController extends Controller
     {
         $sid = $this->broker->getBrokerSessionId($request);
 
-        $this->session->forget($sid);
+        $this->session->setUserData($sid, null);
 
         return response()->json(['success' => true]);
     }

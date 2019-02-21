@@ -111,7 +111,8 @@ class MiddlewareTest extends TestCase
 
         $token = $this->generateToken();
         $sid   = $this->generateSessionId('appid', $token, 'SeCrEt');
-        $this->session->set($sid, json_encode(['username' => 'admin']));
+        $this->session->start($sid);
+        $this->session->setUserData($sid, json_encode(['username' => 'admin']));
 
         $request = new Request(['access_token' => $sid, 'username' => 'admin', 'password' => 'secret']);
 

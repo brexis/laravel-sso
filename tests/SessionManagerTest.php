@@ -4,6 +4,7 @@ namespace Brexis\LaravelSSO\Test;
 
 use Brexis\LaravelSSO\SessionManager;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Session;
 
 class SessionManagerTest extends TestCase
 {
@@ -44,8 +45,9 @@ class SessionManagerTest extends TestCase
 
     public function testShouldSartSession()
     {
+        $id = Session::getId();
         $this->session->start('session_id');
 
-        $this->assertEquals(Cache::get('session_id'), '{}');
+        $this->assertEquals(Cache::get('session_id'), $id);
     }
 }

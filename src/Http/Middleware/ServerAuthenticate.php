@@ -45,7 +45,7 @@ class ServerAuthenticate
 
     protected function check($guard, $sid)
     {
-        $attrs = json_decode($this->session->get($sid), true);
+        $attrs = json_decode($this->session->getUserData($sid), true);
 
         if (!empty($attrs)) {
             $user = $guard->getProvider()->retrieveByCredentials($attrs);
