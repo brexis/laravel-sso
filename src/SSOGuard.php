@@ -149,4 +149,16 @@ class SSOGuard implements Guard
 
         return $this;
     }
+
+    /**
+     * Logout user.
+     *
+     * @return void
+     */
+    public function logout()
+    {
+        if ($this->broker->logout()) {
+            $this->user = null;
+        }
+    }
 }

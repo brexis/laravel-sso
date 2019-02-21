@@ -127,4 +127,12 @@ class SSOGuardTest extends TestCase
         $this->assertTrue($this->guard->check());
         $this->assertEquals($this->guard->user()->id, 1);
     }
+
+    public function testShouldLogout()
+    {
+        $this->broker->shouldReceive('logout')->andReturn(true);
+        $this->broker->shouldReceive('profile')->andReturn([]);
+
+        $this->assertNull($this->guard->user());
+    }
 }
