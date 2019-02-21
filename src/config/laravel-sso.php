@@ -40,6 +40,11 @@ return [
     'broker_client_secret' => null,
 
     /**
+     * Broker client unique username
+     */
+    'broker_client_username' => 'email',
+
+    /**
      * The server Url. Required for clients.
      */
     'broker_server_url' => '',

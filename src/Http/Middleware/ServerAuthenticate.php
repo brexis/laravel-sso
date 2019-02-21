@@ -9,7 +9,7 @@ use Brexis\LaravelSSO\Exceptions\UnauthorizedException;
 
 use Illuminate\Support\Facades\Auth;
 
-class Authenticate
+class ServerAuthenticate
 {
     protected $broker;
 
