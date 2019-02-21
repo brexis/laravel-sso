@@ -18,9 +18,23 @@ class LaravelSSOServiceProvider extends ServiceProvider
      *
      * @var array
      */
-    protected $middlewareAliases = [
-        
+    protected $routeMiddleware = [
+
     ];
+
+    /**
+     * The middleware groups.
+     *
+     * @var array
+     */
+    protected $middlewareGroups = [
+        'sso-api' => [
+            \App\Http\Middleware\EncryptCookies::class,
+            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+            \Illuminate\Session\Middleware\StartSession::class
+        ]
+    ];
+
 
     public function boot()
     {
@@ -33,8 +47,11 @@ class LaravelSSOServiceProvider extends ServiceProvider
         // Add sso guard
         $this->extendAuthGuard();
 
-        // Register middlewares alias
-        $this->extendAuthGuard();
+        // Register route middlewares
+        $this->registerRouteMiddlewares();
+
+        // Register middleware groups
+        $this->registerMiddlewareGroups();
     }
 
     /**
@@ -65,18 +82,32 @@ class LaravelSSOServiceProvider extends ServiceProvider
     }
 
     /**
-     * Register middlewares alias.
+     * Register route middlewares.
      *
      * @return void
      */
-    protected function registerMiddlewares()
+    protected function registerRouteMiddlewares()
     {
         $router = $this->app['router'];
 
         $method = method_exists($router, 'aliasMiddleware') ? 'aliasMiddleware' : 'middleware';
 
-        foreach ($this->middlewareAliases as $alias => $middleware) {
+        foreach ($this->routeMiddleware as $alias => $middleware) {
             $router->$method($alias, $middleware);
+        }
+    }
+
+    /**
+     * Register middleware groups.
+     *
+     * @return void
+     */
+    protected function registerMiddlewareGroups()
+    {
+        $router = $this->app['router'];
+
+        foreach ($this->middlewareGroups as $group => $middlewares) {
+            $router->middlewareGroup($group, $middlewares);
         }
     }
 }
