@@ -1,6 +1,6 @@
 <?php
 
-Route::group(function() {
+Route::middleware('sso-api')->group(function() {
     Route::prefix('sso/server')->name('sso.server.')->group(function() {
         Route::get('attach', 'Brexis\LaravelSSO\Http\Controllers\ServerController@attach')->name('attach');
 
@@ -12,4 +12,4 @@ Route::group(function() {
     Route::prefix('sso/client')->name('sso.client.')->group(function() {
         Route::get('attach', 'Brexis\LaravelSSO\Http\Controllers\ClientController@attach')->name('attach');
     });
-})->middleware('sso-api');
+});

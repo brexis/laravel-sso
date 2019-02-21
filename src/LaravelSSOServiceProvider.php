@@ -29,20 +29,17 @@ class LaravelSSOServiceProvider extends ServiceProvider
      */
     protected $middlewareGroups = [
         'sso-api' => [
-            \App\Http\Middleware\EncryptCookies::class,
+            \Illuminate\Cookie\Middleware\EncryptCookies::class,
             \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
             \Illuminate\Session\Middleware\StartSession::class
         ]
     ];
-
 
     public function boot()
     {
         $this->publishes([
             __DIR__.'/config/laravel-sso.php' => config_path('laravel-sso.php'),
         ]);
-
-        $this->loadRoutesFrom(__DIR__.'/routes.php');
 
         // Add sso guard
         $this->extendAuthGuard();
@@ -52,6 +49,8 @@ class LaravelSSOServiceProvider extends ServiceProvider
 
         // Register middleware groups
         $this->registerMiddlewareGroups();
+
+        $this->loadRoutesFrom(__DIR__.'/routes.php');
     }
 
     /**
