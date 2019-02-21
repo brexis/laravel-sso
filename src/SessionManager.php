@@ -58,20 +58,31 @@ class SessionManager
         Cache::forget($key);
     }
 
+    /**
+     * Set user session data
+     */
     public function setUserData($sid, $value)
     {
         $id = $this->get($sid);
 
         Session::setId($id);
+        Session::start();
 
         Session::put('sso_user', $value);
+        Session::save();
     }
 
+    /**
+     * Retrieve user session data
+     * 
+     * @return string
+     */
     public function getUserData($sid)
     {
         $id = $this->get($sid);
 
         Session::setId($id);
+        Session::start();
 
         return Session::get('sso_user');
     }
