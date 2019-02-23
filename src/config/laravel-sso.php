@@ -60,7 +60,15 @@ return [
     'session_ttl' => 60,
 
     /**
-     * Closure that return the user infor from server
+     * Closure that return the user info from server. This function allows you
+     * to return additional payload data to the clients. By default, the user
+     * attributes are returned by calling $user->toArray().
+     * Eg. 'user_info' => function($user, $broker, $request) {
+     *      $payload = $user->toArray();
+     *      $payload['roles'] = $user->getRolesByApp($broker->id);
+     *
+     *      return $payload
+     * }
      */
     'user_info' => null,
 

@@ -10,6 +10,18 @@ use Brexis\LaravelSSO\Exceptions\InvalidSessionIdException;
 class ServerBrokerManager
 {
     /**
+     * @var Brexis\LaravelSSO\Encription
+     */
+    protected $encription;
+
+    /**
+     * Constructor
+     */
+    public function __construct()
+    {
+        $this->encription = new Encription;
+    }
+    /**
      * Return broker model
      *
      * @return mixed
@@ -72,14 +84,7 @@ class ServerBrokerManager
      */
     public function validateBrokerSessionId($sid)
     {
-        $matches = null;
-
-        if (!preg_match('/^SSO-(\w*+)-(\w*+)-([a-z0-9]*+)$/', $sid, $matches)) {
-            throw new InvalidSessionIdException('Invalid session id');
-        }
-
-        $broker_id = $matches[1];
-        $token = $matches[2];
+        list($broker_id, $token) = $this->getBrokerInfoFromSessionId($sid);
 
         if ($this->generateSessionId($broker_id, $token) != $sid) {
             throw new InvalidSessionIdException('Checksum failed: Client IP address may have changed');
@@ -100,9 +105,11 @@ class ServerBrokerManager
     {
         $model  = $this->findBrokerById($broker_id);
         $secret = $this->findBrokerSecret($model);
-        // TODO replace checksum by encription
+        $checksum = $this->encription->generateChecksum(
+            'session', $token, $secret
+        );
 
-        return "SSO-{$broker_id}-{$token}-" . hash('sha256', 'session' . $token . $secret);
+        return "SSO-{$broker_id}-{$token}-$checksum";
     }
 
     /**
@@ -117,13 +124,29 @@ class ServerBrokerManager
     {
         $model  = $this->findBrokerById($broker_id);
         $secret = $this->findBrokerSecret($model);
-        // TODO Replace checksum by encription
 
-        return hash('sha256', 'attach' . $token . $secret);
+        return $this->encription->generateChecksum('attach', $token, $secret);
     }
 
     /**
-     * Return boker session id
+     * Return broker info from sid
+     *
+     * @param string $sid
+     * @return array
+     */
+    public function getBrokerInfoFromSessionId($sid)
+    {
+        if (!preg_match('/^SSO-(\w*+)-(\w*+)-([a-z0-9]*+)$/', $sid, $matches)) {
+            throw new InvalidSessionIdException('Invalid session id');
+        }
+
+        array_shift($matches);
+
+        return $matches;
+    }
+
+    /**
+     * Retrieve broker session id from request
      *
      * @return string
      */

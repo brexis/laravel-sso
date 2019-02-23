@@ -90,7 +90,7 @@ class ServerController extends Controller
         if ($this->authenticate($request, $this)) {
             $user = $this->guard()->user();
 
-            return response()->json($this->userInfo($user));
+            return response()->json($this->userInfo($user, $request));
         }
 
         return response()->json([], 401);
@@ -102,12 +102,12 @@ class ServerController extends Controller
      * @param \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function profile()
+    public function profile(Request $request)
     {
         $user = $this->guard()->user();
 
         return response()->json(
-            $this->userInfo($user)
+            $this->userInfo($user, $request)
         );
     }
 

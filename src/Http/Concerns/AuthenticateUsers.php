@@ -93,14 +93,24 @@ trait AuthenticateUsers
      * @param mixed $user
      * @return mixed
      */
-    protected function userInfo($user)
+    protected function userInfo($user, Request $request)
     {
         $closure = config('laravel-sso.user_info');
 
         if (is_callable($closure)) {
-            return $closure($user);
+            $broker = $this->getBrokerFromRequest($request);
+
+            return $closure($user, $broker, $request);
         }
 
         return $user->toArray();
+    }
+
+    protected function getBrokerFromRequest(Request $request)
+    {
+        $sid = $this->broker->getBrokerSessionId($request);
+        list($broker_id) = $this->broker->getBrokerInfoFromSessionId($sid);
+
+        return $this->broker->findBrokerById($broker_id);
     }
 }

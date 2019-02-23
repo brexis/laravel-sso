@@ -248,7 +248,8 @@ class ServerControllerTest extends TestCase
         $response->assertOk();
         $response->assertJson($user->toArray());
 
-        $this->app['config']->set('laravel-sso.user_info', function($user) {
+        $this->app['config']->set('laravel-sso.user_info', function($user, $broker) {
+            $this->assertEquals($broker->app_id, 'appid');
             return ['id' => $user->id];
         });
 
