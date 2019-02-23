@@ -2,9 +2,10 @@
 
 namespace Brexis\LaravelSSO;
 
+use Illuminate\Auth\GuardHelpers;
 use Illuminate\Contracts\Auth\UserProvider;
 use Illuminate\Contracts\Auth\Guard;
-use Illuminate\Auth\GuardHelpers;
+use Illuminate\Http\Request;
 use Illuminate\Support\Traits\Macroable;
 
 class SSOGuard implements Guard
@@ -19,15 +20,27 @@ class SSOGuard implements Guard
     protected $broker;
 
     /**
+     * The request instance.
+     *
+     * @var \Symfony\Component\HttpFoundation\Request
+     */
+    protected $request;
+
+    /**
      * Create a new authentication guard.
      *
      * @param  \Illuminate\Contracts\Auth\UserProvider  $provider
+     * @param  \Brexis\LaravelSSO\ClientBrokerManager $broker
+     * @param  \Symfony\Component\HttpFoundation\Request|null  $request
      * @return void
      */
-    public function __construct(UserProvider $provider, ClientBrokerManager $broker)
+    public function __construct(UserProvider $provider,
+                                ClientBrokerManager $broker,
+                                Request $request = null)
     {
         $this->provider = $provider;
         $this->broker = $broker;
+        $this->request = $request;
     }
 
     /**
@@ -117,6 +130,19 @@ class SSOGuard implements Guard
         $user = $this->provider->retrieveByCredentials($credentials);
 
         return ! is_null($user);
+    }
+
+    /**
+     * Set the current request instance.
+     *
+     * @param  \Symfony\Component\HttpFoundation\Request  $request
+     * @return $this
+     */
+    public function setRequest(Request $request)
+    {
+        $this->request = $request;
+
+        return $this;
     }
 
     /**

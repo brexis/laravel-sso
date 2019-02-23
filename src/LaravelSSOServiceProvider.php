@@ -73,10 +73,15 @@ class LaravelSSOServiceProvider extends ServiceProvider
     protected function extendAuthGuard()
     {
         $this->app['auth']->extend('sso', function ($app, $name, array $config) {
-            return new SSOGuard(
+            $guard = new SSOGuard(
                 $app['auth']->createUserProvider($config['provider']),
-                new ClientBrokerManager
+                new ClientBrokerManager,
+                $app['request']
             );
+
+            $app->refresh('request', $guard, 'setRequest');
+
+            return $guard;
         });
     }
 
