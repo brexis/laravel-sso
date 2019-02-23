@@ -76,6 +76,5 @@ class ClientControllerTest extends TestCase
         $response = $this->get($redirect_url);
 
         $response->assertRedirect('http://localhost');
-        $this->assertEquals($session->get($sid), Session::getId());
     }
 }
