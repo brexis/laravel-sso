@@ -3,7 +3,7 @@
 namespace Brexis\LaravelSSO\Test;
 
 use Brexis\LaravelSSO\ServerBrokerManager;
-use Brexis\LaravelSSO\SessionManager;
+use Brexis\LaravelSSO\Session\ServerSessionManager;
 use Brexis\LaravelSSO\Http\Middleware\ServerAuthenticate;
 use Brexis\LaravelSSO\Http\Middleware\ValidateBroker;
 use Brexis\LaravelSSO\Exceptions\InvalidSessionIdException;
@@ -27,7 +27,7 @@ class MiddlewareTest extends TestCase
         parent::setUp();
 
         $this->broker = new ServerBrokerManager;
-        $this->session = new SessionManager;
+        $this->session = new ServerSessionManager;
 
         $this->authenticateMiddleware = new ServerAuthenticate($this->broker, $this->session);
         $this->validateBrokerMiddleware = new ValidateBroker($this->broker);

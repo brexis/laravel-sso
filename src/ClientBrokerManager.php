@@ -3,6 +3,7 @@
 namespace Brexis\LaravelSSO;
 
 use Brexis\LaravelSSO\Exceptions\InvalidClientException;
+use Brexis\LaravelSSO\Session\ClientSessionManager;
 
 /**
  * Class ClientBrokerManager
@@ -15,7 +16,7 @@ class ClientBrokerManager
     protected $encription;
 
     /**
-     * @var Brexis\LaravelSSO\SessionManager
+     * @var Brexis\LaravelSSO\Session\ClientSessionManager
      */
     protected $session;
 
@@ -32,7 +33,7 @@ class ClientBrokerManager
     public function __construct($httpClient = null)
     {
         $this->encription = new Encription;
-        $this->session = new SessionManager;
+        $this->session = new ClientSessionManager;
         $this->requestor = new Requestor($httpClient);
     }
 

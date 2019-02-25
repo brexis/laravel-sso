@@ -3,14 +3,20 @@
 namespace Brexis\LaravelSSO\Http\Controllers;
 
 use Brexis\LaravelSSO\ClientBrokerManager;
-use Brexis\LaravelSSO\SessionManager;
+use Brexis\LaravelSSO\Session\ClientSessionManager;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 
 class ClientController extends Controller
 {
+    /**
+     * @var Brexis\LaravelSSO\ClientBrokerManager
+     */
     protected $broker;
 
+    /**
+     * @var Brexis\LaravelSSO\ClientSessionManager
+     */
     protected $session;
 
     /**
@@ -19,7 +25,7 @@ class ClientController extends Controller
      * @param Brexis\LaravelSSO\ClientBrokerManager $broker
      * @param Brexis\LaravelSSO\SessionManager $session
      */
-    public function __construct(ClientBrokerManager $broker, SessionManager $session)
+    public function __construct(ClientBrokerManager $broker, ClientSessionManager $session)
     {
         $this->broker = $broker;
         $this->session = $session;

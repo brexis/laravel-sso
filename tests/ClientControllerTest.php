@@ -67,7 +67,7 @@ class ClientControllerTest extends TestCase
         ]);
 
         $response->assertRedirect('http://localhost' . $redirect_url);
-        $this->assertEquals(Cache::get($key), $token);
+        $this->assertEquals(Session::get($key), $token);
 
         // Testing Server attach
         Models\App::create(['app_id' => 'appid', 'secret' => 'SeCrEt']);

@@ -3,7 +3,7 @@
 namespace Brexis\LaravelSSO\Http\Controllers;
 
 use Brexis\LaravelSSO\ServerBrokerManager;
-use Brexis\LaravelSSO\SessionManager;
+use Brexis\LaravelSSO\Session\ServerSessionManager;
 use Brexis\LaravelSSO\Http\Middleware\ValidateBroker;
 use Brexis\LaravelSSO\Http\Middleware\ServerAuthenticate;
 use Brexis\LaravelSSO\Http\Concerns\AuthenticateUsers;
@@ -23,7 +23,7 @@ class ServerController extends Controller
 
     protected $return_type = null;
 
-    public function __construct(ServerBrokerManager$broker, SessionManager $session)
+    public function __construct(ServerBrokerManager $broker, ServerSessionManager $session)
     {
         $this->middleware(ValidateBroker::class)->except('attach');
         $this->middleware(ServerAuthenticate::class)->only(['profile', 'logout']);
