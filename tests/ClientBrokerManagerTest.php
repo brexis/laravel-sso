@@ -5,11 +5,11 @@ namespace Brexis\LaravelSSO\Test;
 use Brexis\LaravelSSO\ClientBrokerManager;
 use Brexis\LaravelSSO\Exceptions\InvalidClientException;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Http\Request;
 use GuzzleHttp\Client;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
-use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Middleware;
 
@@ -132,7 +132,33 @@ class ClientBrokerManagerTest extends TestCase
         ], null, ['username' => 'admin', 'password' => 'secret']);
     }
 
-    public function testShouldSendLogoutRequest()
+    public function testShouldSendLoginRequestWithHeader()
+    {
+        $this->app['config']->set('laravel-sso.broker_client_id', 'app_id');
+        $this->app['config']->set('laravel-sso.broker_client_secret', 'app_secret');
+        $this->app['config']->set('laravel-sso.broker_server_url', 'http://localhost/sso/server');
+
+        $client = $this->mockHttpClient(200, ['success' => true]);
+
+        $broker = new ClientBrokerManager($client);
+        $token = $broker->generateClientToken();
+        $broker->saveClientToken($token);
+        $sid = $broker->sessionId($token);
+
+        $this->assertNotFalse($broker->login(
+            ['username' => 'admin', 'password' => 'secret'],
+            new Request([], [], [], [], [], ['HTTP_USER_AGENT' => 'Mac OsX', 'REMOTE_ADDR' => '123.44.90.3'])
+        ));
+
+        $this->exceptHttpRequest('/sso/server/login', 'POST', [
+            'Authorization' => ['Bearer ' . $sid],
+            'Accept' => ['application/json'],
+            'SSO-User-Agent' => ['Mac OsX'],
+            'SSO-REMOTE-ADDR' => ['123.44.90.3']
+        ], null, ['username' => 'admin', 'password' => 'secret']);
+    }
+
+    public function testShouldSendProfileRequest()
     {
         $this->app['config']->set('laravel-sso.broker_client_id', 'app_id');
         $this->app['config']->set('laravel-sso.broker_client_secret', 'app_secret');
@@ -153,7 +179,32 @@ class ClientBrokerManagerTest extends TestCase
         ]);
     }
 
-    public function testShouldSendProfileRequest()
+    public function testShouldSendProfileRequestWithHeaders()
+    {
+        $this->app['config']->set('laravel-sso.broker_client_id', 'app_id');
+        $this->app['config']->set('laravel-sso.broker_client_secret', 'app_secret');
+        $this->app['config']->set('laravel-sso.broker_server_url', 'http://localhost/sso/server');
+
+        $client = $this->mockHttpClient(200);
+
+        $broker = new ClientBrokerManager($client);
+        $token = $broker->generateClientToken();
+        $broker->saveClientToken($token);
+        $sid = $broker->sessionId($token);
+
+        $broker->profile(
+            new Request([], [], [], [], [], ['HTTP_USER_AGENT' => 'Mac OsX', 'REMOTE_ADDR' => '123.44.90.3'])
+        );
+
+        $this->exceptHttpRequest('/sso/server/profile', 'GET', [
+            'Authorization' => ['Bearer ' . $sid],
+            'Accept' => ['application/json'],
+            'SSO-User-Agent' => ['Mac OsX'],
+            'SSO-REMOTE-ADDR' => ['123.44.90.3']
+        ]);
+    }
+
+    public function testShouldSendLogoutRequest()
     {
         $this->app['config']->set('laravel-sso.broker_client_id', 'app_id');
         $this->app['config']->set('laravel-sso.broker_client_secret', 'app_secret');
@@ -171,6 +222,31 @@ class ClientBrokerManagerTest extends TestCase
         $this->exceptHttpRequest('/sso/server/logout', 'POST', [
             'Authorization' => ['Bearer ' . $sid],
             'Accept' => ['application/json']
+        ]);
+    }
+
+    public function testShouldSendLogoutRequestWithHeaders()
+    {
+        $this->app['config']->set('laravel-sso.broker_client_id', 'app_id');
+        $this->app['config']->set('laravel-sso.broker_client_secret', 'app_secret');
+        $this->app['config']->set('laravel-sso.broker_server_url', 'http://localhost/sso/server');
+
+        $client = $this->mockHttpClient(200, ['success' => true]);
+
+        $broker = new ClientBrokerManager($client);
+        $token = $broker->generateClientToken();
+        $broker->saveClientToken($token);
+        $sid = $broker->sessionId($token);
+
+        $this->assertTrue($broker->logout(
+            new Request([], [], [], [], [], ['HTTP_USER_AGENT' => 'Mac OsX', 'REMOTE_ADDR' => '123.44.90.3'])
+        ));
+
+        $this->exceptHttpRequest('/sso/server/logout', 'POST', [
+            'Authorization' => ['Bearer ' . $sid],
+            'Accept' => ['application/json'],
+            'SSO-User-Agent' => ['Mac OsX'],
+            'SSO-REMOTE-ADDR' => ['123.44.90.3']
         ]);
     }
 }

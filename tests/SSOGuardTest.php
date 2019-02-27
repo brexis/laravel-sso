@@ -106,7 +106,7 @@ class SSOGuardTest extends TestCase
         $this->broker->shouldReceive('login')->with([
             'foo' => 'bar',
             'remember' => true
-        ])->andReturn(false);
+        ], null)->andReturn(false);
 
         $this->assertFalse($this->guard->attempt($credentials, true));
     }
@@ -122,7 +122,7 @@ class SSOGuardTest extends TestCase
         $this->broker->shouldReceive('login')->with([
             'email' => 'admin@test.com',
             'remember' => true
-        ])->andReturn(['email' => 'admin@test.com']);
+        ], null)->andReturn(['email' => 'admin@test.com']);
 
         $this->provider->shouldReceive('retrieveByCredentials')
              ->with(['email' => 'admin@test.com'])

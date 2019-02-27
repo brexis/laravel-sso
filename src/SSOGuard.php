@@ -54,7 +54,7 @@ class SSOGuard implements Guard
             return $this->user;
         }
 
-        if ($payload = $this->broker->profile()) {
+        if ($payload = $this->broker->profile($this->request)) {
             $this->user = $this->retrieveFromPayload($payload);
 
             $this->updatePayload($payload);
@@ -77,7 +77,7 @@ class SSOGuard implements Guard
             $login_params['remember'] = true;
         }
 
-        if ($payload = $this->broker->login($login_params)) {
+        if ($payload = $this->broker->login($login_params, $this->request)) {
             $this->user = $this->retrieveFromPayload($payload);
 
             $this->updatePayload($payload);
