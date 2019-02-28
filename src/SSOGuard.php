@@ -203,7 +203,7 @@ class SSOGuard implements Guard
     {
         $user = $this->user();
 
-        if ($this->broker->logout()) {
+        if ($this->broker->logout($this->request)) {
             $this->fireLogoutEvent($user);
 
             $this->user = null;
