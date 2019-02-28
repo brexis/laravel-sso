@@ -3,6 +3,7 @@
 namespace Brexis\LaravelSSO;
 
 use Brexis\LaravelSSO\Exceptions\InvalidSessionIdException;
+use Illuminate\Http\Request;
 
 /**
  * Class ServerBrokerManager
@@ -163,5 +164,20 @@ class ServerBrokerManager
         }
 
         return $token;
+    }
+
+    /**
+     * Return broker model from Http Request
+     *
+     * @param Illuminate\Http\Request $request
+     *
+     * @return mixed
+     */
+    public function getBrokerFromRequest(Request $request)
+    {
+        $sid = $this->getBrokerSessionId($request);
+        list($broker_id) = $this->getBrokerInfoFromSessionId($sid);
+
+        return $this->findBrokerById($broker_id);
     }
 }

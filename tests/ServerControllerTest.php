@@ -222,6 +222,8 @@ class ServerControllerTest extends TestCase
 
     public function testShouldReturnUserProfile()
     {
+        $this->withoutExceptionHandling();
+
         $secret = 'SeCrEt';
         Models\App::create(['app_id' => 'appid', 'secret' => $secret]);
         $user = Models\User::create([
@@ -254,6 +256,7 @@ class ServerControllerTest extends TestCase
         });
 
         $response = $this->get('/sso/server/profile?access_token=' .$sid);
+
 
         $response->assertOk();
         $response->assertJson(['id' => $user->id]);

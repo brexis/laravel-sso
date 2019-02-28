@@ -98,19 +98,11 @@ trait AuthenticateUsers
         $closure = config('laravel-sso.user_info');
 
         if (is_callable($closure)) {
-            $broker = $this->getBrokerFromRequest($request);
+            $broker = $this->broker->getBrokerFromRequest($request);
 
             return $closure($user, $broker, $request);
         }
 
         return $user->toArray();
-    }
-
-    protected function getBrokerFromRequest(Request $request)
-    {
-        $sid = $this->broker->getBrokerSessionId($request);
-        list($broker_id) = $this->broker->getBrokerInfoFromSessionId($sid);
-
-        return $this->broker->findBrokerById($broker_id);
     }
 }

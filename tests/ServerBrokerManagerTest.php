@@ -128,4 +128,23 @@ class ServerBrokerManagerTest extends TestCase
         $this->assertEquals($broker_id, 'appid');
         $this->assertEquals($ntoken, $token);
     }
+
+    public function testShouldReturnBrokerFromRequest()
+    {
+        $this->app['config']->set('laravel-sso.brokers.model', Models\App::class);
+        $this->app['config']->set('laravel-sso.brokers.id_field', 'app_id');
+        $this->app['config']->set('laravel-sso.brokers.secret_field', 'secret');
+
+        Models\App::create(['app_id' => 'appid', 'secret' => 'SeCrEt']);
+
+        $token = $this->generateToken();
+        $sid   = $this->generateSessionId('appid', $token, 'SeCrEt');
+
+        $request = new Request([], ['sso_session' => $sid], [], [], [], ['REQUEST_METHOD' => 'POST']);
+
+        $broker = $this->broker->getBrokerFromRequest($request);
+
+        $this->assertEquals($broker->app_id, 'appid');
+        $this->assertEquals($broker->secret, 'SeCrEt');
+    }
 }
