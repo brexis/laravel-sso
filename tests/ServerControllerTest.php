@@ -6,9 +6,11 @@ use Brexis\LaravelSSO\ServerBrokerManager;
 use Brexis\LaravelSSO\SessionManager;
 use Brexis\LaravelSSO\Exceptions\UnauthorizedException;
 use Brexis\LaravelSSO\Exceptions\NotAttachedException;
+use Brexis\LaravelSSO\Events;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Event;
 
 class ServerControllerTest extends TestCase
 {
@@ -127,6 +129,8 @@ class ServerControllerTest extends TestCase
 
     public function testShouldFailAuthenticate()
     {
+        Event::fake();
+
         $secret = 'SeCrEt';
         Models\App::create(['app_id' => 'appid', 'secret' => $secret]);
         $token = $this->generateToken();
@@ -144,10 +148,17 @@ class ServerControllerTest extends TestCase
         ]);
 
         $response->assertStatus(401);
+
+        Event::assertDispatched(Events\LoginFailed::class, function ($e) {
+            $this->assertEquals($e->credentials, ['email' => 'admin@admin.com', 'password' => 'secret']);
+            return true;
+        });
     }
 
     public function testShouldAuthenticateWithEmail()
     {
+        Event::fake();
+
         $secret = 'SeCrEt';
         Models\App::create(['app_id' => 'appid', 'secret' => $secret]);
         $user = Models\User::create([
@@ -169,12 +180,22 @@ class ServerControllerTest extends TestCase
             'email' => 'admin@admin.com', 'password' => 'secret'
         ]);
 
+        Event::assertDispatched(Events\Authenticated::class, function ($e) use ($user) {
+            return $e->user->id === $user->id;
+        });
+
+        Event::assertDispatched(Events\LoginSucceeded::class, function ($e) use ($user) {
+            return $e->user->id === $user->id;
+        });
+
         $response->assertOk();
         $response->assertJson($user->toArray());
     }
 
     public function testShouldAuthenticateWithUsername()
     {
+        Event::fake();
+
         $secret = 'SeCrEt';
         Models\App::create(['app_id' => 'appid', 'secret' => $secret]);
         $user = Models\User::create([
@@ -195,6 +216,15 @@ class ServerControllerTest extends TestCase
             'access_token' => $sid,
             'username' => 'admin', 'password' => 'secret', 'login' => 'username'
         ]);
+
+        Event::assertDispatched(Events\Authenticated::class, function ($e) use ($user) {
+            return $e->user->id === $user->id;
+        });
+
+        Event::assertDispatched(Events\LoginSucceeded::class, function ($e) use ($user) {
+            return $e->user->id === $user->id;
+        });
+
 
         $response->assertOk();
         $response->assertJson($user->toArray());
@@ -257,13 +287,14 @@ class ServerControllerTest extends TestCase
 
         $response = $this->get('/sso/server/profile?access_token=' .$sid);
 
-
         $response->assertOk();
         $response->assertJson(['id' => $user->id]);
     }
 
     public function testShouldLogoutUser()
     {
+        Event::fake();
+
         $this->withoutExceptionHandling();
         $this->expectException(UnauthorizedException::class);
         $this->expectExceptionMessage('Unauthorized');
@@ -297,6 +328,10 @@ class ServerControllerTest extends TestCase
         $this->post('/sso/server/logout', [
             'access_token' => $sid
         ]);
+
+        Event::assertDispatched(Events\Logout::class, function ($e) use ($user) {
+            return $e->user->id === $user->id;
+        });
 
         $this->get('/sso/server/profile?access_token=' .$sid);
     }

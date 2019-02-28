@@ -8,6 +8,7 @@ use Brexis\LaravelSSO\Http\Middleware\ValidateBroker;
 use Brexis\LaravelSSO\Http\Middleware\ServerAuthenticate;
 use Brexis\LaravelSSO\Http\Concerns\AuthenticateUsers;
 use Brexis\LaravelSSO\Exceptions\NotAttachedException;
+use Brexis\LaravelSSO\Events;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Routing\Controller;
@@ -90,8 +91,12 @@ class ServerController extends Controller
         if ($this->authenticate($request, $this)) {
             $user = $this->guard()->user();
 
+            event(new Events\LoginSucceeded($user, $request));
+
             return response()->json($this->userInfo($user, $request));
         }
+
+        event(new Events\LoginFailed($this->loginCredentials($request), $request));
 
         return response()->json([], 401);
     }
@@ -119,9 +124,13 @@ class ServerController extends Controller
      */
     public function logout(Request $request)
     {
+        $user = $request->user();
+
         $sid = $this->broker->getBrokerSessionId($request);
 
         $this->session->setUserData($sid, null);
+
+        event(new Events\Logout($user));
 
         return response()->json(['success' => true]);
     }

@@ -2,6 +2,7 @@
 
 namespace Brexis\LaravelSSO\Http\Concerns;
 
+use Brexis\LaravelSSO\Events;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -13,6 +14,10 @@ trait AuthenticateUsers
     protected function authenticate(Request $request, $broker)
     {
         if ($this->attemptLogin($request)) {
+            $user = $this->guard()->user();
+
+            event(new Events\Authenticated($user, $request));
+
             $sid = $this->broker->getBrokerSessionId($request);
             $credentials = json_encode($this->sessionCredentials($request));
 

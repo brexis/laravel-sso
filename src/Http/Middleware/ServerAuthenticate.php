@@ -6,6 +6,7 @@ use Closure;
 use Brexis\LaravelSSO\ServerBrokerManager;
 use Brexis\LaravelSSO\Session\ServerSessionManager;
 use Brexis\LaravelSSO\Exceptions\UnauthorizedException;
+use Brexis\LaravelSSO\Events;
 
 use Illuminate\Support\Facades\Auth;
 
@@ -36,7 +37,8 @@ class ServerAuthenticate
         $sid = $this->broker->getBrokerSessionId($request);
         $this->broker->validateBrokerSessionId($sid);
 
-        if ($this->check($guard, $sid)) {
+        if ($user = $this->check($guard, $sid, $request)) {
+            event(new Events\Authenticated($user, $request));
             return $next($request);
         }
 
@@ -50,7 +52,9 @@ class ServerAuthenticate
         if (!empty($attrs)) {
             $user = $guard->getProvider()->retrieveByCredentials($attrs);
 
-            return $user && $guard->onceUsingId($user->id);
+            if ($user && $guard->onceUsingId($user->id)) {
+                return $user;
+            }
         }
 
         return false;
