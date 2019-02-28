@@ -4,8 +4,12 @@ namespace Brexis\LaravelSSO\Test;
 
 use Mockery;
 use Illuminate\Auth\EloquentUserProvider;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Events\Dispatcher;
+use Hamcrest\Matchers;
 use Brexis\LaravelSSO\SSOGuard;
 use Brexis\LaravelSSO\ClientBrokerManager;
+use Brexis\LaravelSSO\Events;
 
 class SSOGuardTest extends TestCase
 {
@@ -16,11 +20,14 @@ class SSOGuardTest extends TestCase
         parent::setUp();
         $this->broker = Mockery::mock(ClientBrokerManager::class);
         $this->provider = Mockery::mock(EloquentUserProvider::class);
+        $this->dispatcher = Mockery::mock(Dispatcher::class);
         $this->guard = new SSOGuard($this->provider, $this->broker);
+        $this->guard->setDispatcher($this->dispatcher);
     }
 
     public function testShouldRetunUserByCheckingEmail()
     {
+        $user = (object) ['id' => 1];
         $this->broker->shouldReceive('profile')->andReturn([
             'id' => 1,
             'email' => 'admin@test.com'
@@ -28,7 +35,13 @@ class SSOGuardTest extends TestCase
 
         $this->provider->shouldReceive('retrieveByCredentials')
              ->with(['email' => 'admin@test.com'])
-             ->andReturn((object) ['id' => 1]);
+             ->andReturn($user);
+
+        $this->dispatcher->shouldReceive('dispatch')->with(
+            Mockery::on(function($e) use ($user) {
+                return $e == new Events\Authenticated($user, null);
+            })
+        );
 
         $user = $this->guard->user();
 
@@ -38,6 +51,7 @@ class SSOGuardTest extends TestCase
     public function testShouldRetunUserByCheckingUsername()
     {
         $this->app['config']->set('laravel-sso.broker_client_username', 'username');
+        $user = (object) ['id' => 1];
 
         $this->broker->shouldReceive('profile')->andReturn([
             'id' => 1,
@@ -46,7 +60,13 @@ class SSOGuardTest extends TestCase
 
         $this->provider->shouldReceive('retrieveByCredentials')
              ->with(['username' => 'admin'])
-             ->andReturn((object) ['id' => 1]);
+             ->andReturn($user);
+
+        $this->dispatcher->shouldReceive('dispatch')->with(
+            Mockery::on(function($e) use ($user) {
+                return $e == new Events\Authenticated($user, null);
+            })
+        );
 
         $user = $this->guard->user();
 
@@ -55,6 +75,8 @@ class SSOGuardTest extends TestCase
 
     public function testShouldCheckUser()
     {
+        $user = (object) ['id' => 1];
+
         $this->broker->shouldReceive('profile')->andReturn([
             'id' => 1,
             'email' => 'admin@test.com'
@@ -62,7 +84,13 @@ class SSOGuardTest extends TestCase
 
         $this->provider->shouldReceive('retrieveByCredentials')
              ->with(['email' => 'admin@test.com'])
-             ->andReturn((object) ['id' => 1]);
+             ->andReturn($user);
+
+        $this->dispatcher->shouldReceive('dispatch')->with(
+            Mockery::on(function($e) use ($user) {
+                return $e == new Events\Authenticated($user, null);
+            })
+        );
 
         $this->assertTrue($this->guard->check());
     }
@@ -97,6 +125,12 @@ class SSOGuardTest extends TestCase
              ->with(['email' => 'admin@test.com'])
              ->andReturn($user);
 
+        $this->dispatcher->shouldReceive('dispatch')->with(
+            Mockery::on(function($e) use ($user) {
+                return $e == new Events\Authenticated($user, null);
+            })
+        );
+
         $this->assertEquals($this->guard->id(), $user->id);
     }
 
@@ -107,6 +141,12 @@ class SSOGuardTest extends TestCase
             'foo' => 'bar',
             'remember' => true
         ], null)->andReturn(false);
+
+        $this->dispatcher->shouldReceive('dispatch')->with(
+            Mockery::on(function($e) use ($credentials) {
+                return $e == new Events\LoginFailed($credentials, null);
+            })
+        );
 
         $this->assertFalse($this->guard->attempt($credentials, true));
     }
@@ -127,6 +167,9 @@ class SSOGuardTest extends TestCase
         $this->provider->shouldReceive('retrieveByCredentials')
              ->with(['email' => 'admin@test.com'])
              ->andReturn($user);
+
+        $this->dispatcher->shouldReceive('dispatch')->once()->with(Mockery::type(Events\Authenticated::class));
+        $this->dispatcher->shouldReceive('dispatch')->once()->with(Mockery::type(Events\LoginSucceeded::class));
 
         $this->assertNotFalse($this->guard->attempt($credentials, true));
         $this->assertTrue($this->guard->check());
