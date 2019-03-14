@@ -3,8 +3,8 @@
 namespace Brexis\LaravelSSO\Test;
 
 use Brexis\LaravelSSO\ServerBrokerManager;
-use Brexis\LaravelSSO\SessionManager;
-use Brexis\LaravelSSO\Http\Middleware\Authenticate;
+use Brexis\LaravelSSO\Session\ServerSessionManager;
+use Brexis\LaravelSSO\Http\Middleware\ServerAuthenticate;
 use Brexis\LaravelSSO\Http\Middleware\ValidateBroker;
 use Brexis\LaravelSSO\Exceptions\InvalidSessionIdException;
 use Brexis\LaravelSSO\Exceptions\UnauthorizedException;
@@ -27,9 +27,9 @@ class MiddlewareTest extends TestCase
         parent::setUp();
 
         $this->broker = new ServerBrokerManager;
-        $this->session = new SessionManager;
+        $this->session = new ServerSessionManager;
 
-        $this->authenticateMiddleware = new Authenticate($this->broker, $this->session);
+        $this->authenticateMiddleware = new ServerAuthenticate($this->broker, $this->session);
         $this->validateBrokerMiddleware = new ValidateBroker($this->broker);
 
         $this->app['config']->set('auth.providers.users.model', Models\User::class);
@@ -69,7 +69,7 @@ class MiddlewareTest extends TestCase
         $this->assertEquals($response->status(), 200);
     }
 
-    public function testShouldThrownExceptionIfBrokerIsNotValidForAuthenticate()
+    public function testShouldThrownExceptionIfBrokerIsNotValidForServerAuthenticate()
     {
         $this->expectException(InvalidSessionIdException::class);
         $this->expectExceptionMessage('Checksum failed: Client IP address may have changed');
@@ -111,7 +111,8 @@ class MiddlewareTest extends TestCase
 
         $token = $this->generateToken();
         $sid   = $this->generateSessionId('appid', $token, 'SeCrEt');
-        $this->session->set($sid, json_encode(['username' => 'admin']));
+        $this->session->start($sid);
+        $this->session->setUserData($sid, json_encode(['username' => 'admin']));
 
         $request = new Request(['access_token' => $sid, 'username' => 'admin', 'password' => 'secret']);
 

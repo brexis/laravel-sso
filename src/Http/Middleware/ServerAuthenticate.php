@@ -4,18 +4,19 @@ namespace Brexis\LaravelSSO\Http\Middleware;
 
 use Closure;
 use Brexis\LaravelSSO\ServerBrokerManager;
-use Brexis\LaravelSSO\SessionManager;
+use Brexis\LaravelSSO\Session\ServerSessionManager;
 use Brexis\LaravelSSO\Exceptions\UnauthorizedException;
+use Brexis\LaravelSSO\Events;
 
 use Illuminate\Support\Facades\Auth;
 
-class Authenticate
+class ServerAuthenticate
 {
     protected $broker;
 
     protected $session;
 
-    public function __construct(ServerBrokerManager$broker, SessionManager $session)
+    public function __construct(ServerBrokerManager $broker, ServerSessionManager $session)
     {
         $this->broker = $broker;
         $this->session = $session;
@@ -36,7 +37,8 @@ class Authenticate
         $sid = $this->broker->getBrokerSessionId($request);
         $this->broker->validateBrokerSessionId($sid);
 
-        if ($this->check($guard, $sid)) {
+        if ($user = $this->check($guard, $sid, $request)) {
+            event(new Events\Authenticated($user, $request));
             return $next($request);
         }
 
@@ -45,12 +47,14 @@ class Authenticate
 
     protected function check($guard, $sid)
     {
-        $attrs = json_decode($this->session->get($sid), true);
+        $attrs = json_decode($this->session->getUserData($sid), true);
 
         if (!empty($attrs)) {
             $user = $guard->getProvider()->retrieveByCredentials($attrs);
 
-            return $user && $guard->onceUsingId($user->id);
+            if ($user && $guard->onceUsingId($user->id)) {
+                return $user;
+            }
         }
 
         return false;

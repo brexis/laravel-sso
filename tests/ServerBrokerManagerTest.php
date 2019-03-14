@@ -112,4 +112,39 @@ class ServerBrokerManagerTest extends TestCase
         $request = new Request([], ['sso_session' => 'SsoToken'], [], [], [], ['REQUEST_METHOD' => 'POST']);
         $this->assertEquals($this->broker->getBrokerSessionId($request), 'SsoToken');
     }
+
+    public function testShouldReturnBrokerInfoFromSessionId()
+    {
+        $this->app['config']->set('laravel-sso.brokers.model', Models\App::class);
+        $this->app['config']->set('laravel-sso.brokers.id_field', 'app_id');
+        $this->app['config']->set('laravel-sso.brokers.secret_field', 'secret');
+
+        Models\App::create(['app_id' => 'appid', 'secret' => 'SeCrEt']);
+
+        $token = $this->generateToken();
+        $sid   = $this->generateSessionId('appid', $token, 'SeCrEt');
+        list($broker_id, $ntoken) = $this->broker->getBrokerInfoFromSessionId($sid);
+
+        $this->assertEquals($broker_id, 'appid');
+        $this->assertEquals($ntoken, $token);
+    }
+
+    public function testShouldReturnBrokerFromRequest()
+    {
+        $this->app['config']->set('laravel-sso.brokers.model', Models\App::class);
+        $this->app['config']->set('laravel-sso.brokers.id_field', 'app_id');
+        $this->app['config']->set('laravel-sso.brokers.secret_field', 'secret');
+
+        Models\App::create(['app_id' => 'appid', 'secret' => 'SeCrEt']);
+
+        $token = $this->generateToken();
+        $sid   = $this->generateSessionId('appid', $token, 'SeCrEt');
+
+        $request = new Request([], ['sso_session' => $sid], [], [], [], ['REQUEST_METHOD' => 'POST']);
+
+        $broker = $this->broker->getBrokerFromRequest($request);
+
+        $this->assertEquals($broker->app_id, 'appid');
+        $this->assertEquals($broker->secret, 'SeCrEt');
+    }
 }

@@ -7,16 +7,9 @@ use Brexis\LaravelSSO\SessionManager;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Session;
 use Mockery;
 
-/*class MockEncryption extends \Brexis\LaravelSSO\Encription
-{
-    public function randomToken()
-    {
-        return 'emnxnx465ugcgsgk4gw0c888w';
-    }
-}
-*/
 class ClientControllerTest extends TestCase
 {
     public function setUp()
@@ -64,7 +57,7 @@ class ClientControllerTest extends TestCase
         ]);
 
         $this->assertRedirectedTo('http://localhost' . $redirect_url);
-        $this->assertEquals(Cache::get($key), $token);
+        $this->assertEquals(Session::get($key), $token);
 
         // Testing Server attach
         Models\App::create(['app_id' => 'appid', 'secret' => 'SeCrEt']);
@@ -73,6 +66,5 @@ class ClientControllerTest extends TestCase
         $this->get($redirect_url);
 
         $this->assertRedirectedTo('http://localhost');
-        $this->assertEquals($session->get($sid), '{}');
     }
 }

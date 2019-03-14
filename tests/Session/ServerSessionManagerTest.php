@@ -1,17 +1,18 @@
 <?php
 
-namespace Brexis\LaravelSSO\Test;
+namespace Brexis\LaravelSSO\Test\Session;
 
-use Brexis\LaravelSSO\SessionManager;
+use Brexis\LaravelSSO\Session\ServerSessionManager;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Session;
+use Brexis\LaravelSSO\Test\TestCase;
 
-class SessionManagerTest extends TestCase
+class ServerSessionManagerTest extends TestCase
 {
     public function setUp()
     {
         parent::setUp();
-        $this->session = new SessionManager();
+        $this->session = new ServerSessionManager();
     }
 
     public function testShouldSetSessionInCache()

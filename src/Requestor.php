@@ -36,16 +36,18 @@ class Requestor
      * @param string $secret
      * @return string
      */
-    public function request($sid, $method, $url, $params = [])
+    public function request($sid, $method, $url, $params = [], $headers = [])
     {
         try {
+            $headers = array_merge($headers, [
+                'Authorization' => 'Bearer ' . $sid,
+                'Accept' => 'application/json'
+            ]);
+
             $response = $this->client->request($method, $url, [
                 'query' => $method === 'GET' ? $params : [],
                 'form_params' => $method === 'POST' ? $params : [],
-                'headers' => [
-                    'Authorization' => 'Bearer ' . $sid,
-                    'Accept' => 'application/json'
-                ]
+                'headers' => $headers
             ]);
 
             return json_decode($response->getBody()->getContents(), true);

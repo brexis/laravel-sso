@@ -3,11 +3,12 @@
 namespace Brexis\LaravelSSO\Http\Controllers;
 
 use Brexis\LaravelSSO\ServerBrokerManager;
-use Brexis\LaravelSSO\SessionManager;
+use Brexis\LaravelSSO\Session\ServerSessionManager;
 use Brexis\LaravelSSO\Http\Middleware\ValidateBroker;
-use Brexis\LaravelSSO\Http\Middleware\Authenticate;
+use Brexis\LaravelSSO\Http\Middleware\ServerAuthenticate;
 use Brexis\LaravelSSO\Http\Concerns\AuthenticateUsers;
 use Brexis\LaravelSSO\Exceptions\NotAttachedException;
+use Brexis\LaravelSSO\Events;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Routing\Controller;
@@ -23,10 +24,10 @@ class ServerController extends Controller
 
     protected $return_type = null;
 
-    public function __construct(ServerBrokerManager$broker, SessionManager $session)
+    public function __construct(ServerBrokerManager $broker, ServerSessionManager $session)
     {
         $this->middleware(ValidateBroker::class)->except('attach');
-        $this->middleware(Authenticate::class)->only('profile');
+        $this->middleware(ServerAuthenticate::class)->only(['profile', 'logout']);
 
         $this->broker = $broker;
         $this->session = $session;
@@ -90,13 +91,14 @@ class ServerController extends Controller
         if ($this->authenticate($request, $this)) {
             $user = $this->guard()->user();
 
-            return response()->json([
-                'success' => true,
-                'user' => $this->userInfo($user)
-            ]);
+            event(new Events\LoginSucceeded($user, $request));
+
+            return response()->json($this->userInfo($user, $request));
         }
 
-        return response()->json(['success' => false], 401);
+        event(new Events\LoginFailed($this->loginCredentials($request), $request));
+
+        return response()->json([], 401);
     }
 
     /**
@@ -105,12 +107,12 @@ class ServerController extends Controller
      * @param \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function profile()
+    public function profile(Request $request)
     {
         $user = $this->guard()->user();
 
         return response()->json(
-            $this->userInfo($user)
+            $this->userInfo($user, $request)
         );
     }
 
@@ -122,9 +124,13 @@ class ServerController extends Controller
      */
     public function logout(Request $request)
     {
+        $user = $request->user();
+
         $sid = $this->broker->getBrokerSessionId($request);
 
-        $this->session->get($sid);
+        $this->session->setUserData($sid, null);
+
+        event(new Events\Logout($user));
 
         return response()->json(['success' => true]);
     }

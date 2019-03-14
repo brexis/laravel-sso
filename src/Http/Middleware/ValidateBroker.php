@@ -9,7 +9,7 @@ class ValidateBroker
 {
     protected $broker;
 
-    public function __construct(ServerBrokerManager$broker)
+    public function __construct(ServerBrokerManager $broker)
     {
         $this->broker = $broker;
     }

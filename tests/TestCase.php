@@ -27,6 +27,7 @@ abstract class TestCase extends OrchestraTestCase
     public function getEnvironmentSetUp($app)
     {
         $app['config']->set('auth.providers.users.model', User::class);
+        $app['config']->set('app.key', 'base64:lSHpE8/8DtS4DmvHsOrfs7cs0clyjAlKhj4+BUYB3u8=');
     }
 
     public function setUpDatabase($app)
@@ -69,7 +70,7 @@ abstract class TestCase extends OrchestraTestCase
         // Add the history middleware to the handler stack.
         $stack->push($history);
         $client = new Client(['handler' => $stack]);
-        
+
         return $client;
     }
 

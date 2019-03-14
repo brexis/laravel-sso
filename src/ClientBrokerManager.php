@@ -3,6 +3,8 @@
 namespace Brexis\LaravelSSO;
 
 use Brexis\LaravelSSO\Exceptions\InvalidClientException;
+use Brexis\LaravelSSO\Session\ClientSessionManager;
+use Illuminate\Http\Request;
 
 /**
  * Class ClientBrokerManager
@@ -15,7 +17,7 @@ class ClientBrokerManager
     protected $encription;
 
     /**
-     * @var Brexis\LaravelSSO\SessionManager
+     * @var Brexis\LaravelSSO\Session\ClientSessionManager
      */
     protected $session;
 
@@ -24,10 +26,15 @@ class ClientBrokerManager
      */
     protected $requestor;
 
+    /**
+     * Constructor
+     *
+     * @param Brexis\LaravelSSO\Requestor $httpClient
+     */
     public function __construct($httpClient = null)
     {
         $this->encription = new Encription;
-        $this->session = new SessionManager;
+        $this->session = new ClientSessionManager;
         $this->requestor = new Requestor($httpClient);
     }
 
@@ -171,33 +178,73 @@ class ClientBrokerManager
         );
     }
 
-    public function login($credentials)
+    /**
+     * Send login request
+     *
+     * @param array $credentials
+     * @param Illuminate\Http\Request $request
+     *
+     * @return bool|array
+     */
+    public function login($credentials, Request $request = null)
     {
         $url   = $this->serverUrl('/login');
         $token = $this->getClientToken();
         $sid   = $this->sessionId($token);
+        $headers = $this->agentHeaders($request);
 
-        $response = $this->requestor->request($sid, 'POST', $url, $credentials);
-
-        return $response['success'] === true;
+        return $this->requestor->request($sid, 'POST', $url, $credentials, $headers);
     }
 
-    public function profile()
+    /**
+     * Send profile request
+     * @param Illuminate\Http\Request $request
+     *
+     * @return bool|array
+     */
+    public function profile(Request $request = null)
     {
         $url   = $this->serverUrl('/profile');
         $token = $this->getClientToken();
         $sid   = $this->sessionId($token);
+        $headers = $this->agentHeaders($request);
 
-        return $this->requestor->request($sid, 'GET', $url);
+        return $this->requestor->request($sid, 'GET', $url, [], $headers);
     }
 
-    public function logout()
+    /**
+     * Send logout request
+     * @param Illuminate\Http\Request $request
+     * 
+     * @return bool
+     */
+    public function logout(Request $request = null)
     {
         $url   = $this->serverUrl('/logout');
         $token = $this->getClientToken();
         $sid   = $this->sessionId($token);
+        $headers = $this->agentHeaders($request);
 
-        $response = $this->requestor->request($sid, 'POST', $url);
+        $response = $this->requestor->request($sid, 'POST', $url, [], $headers);
         return $response['success'] === true;
+    }
+
+    /**
+     * Add agent headers
+     *
+     * @param Illuminate\Http\Request $request
+     */
+    protected function agentHeaders(Request $request = null)
+    {
+        $headers = [];
+
+        if ($request) {
+            $headers = [
+                'SSO-User-Agent' => $request->header('User-Agent'),
+                'SSO-REMOTE-ADDR' => $request->ip()
+            ];
+        }
+
+        return $headers;
     }
 }

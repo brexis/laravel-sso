@@ -3,6 +3,7 @@
 namespace Brexis\LaravelSSO;
 
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Session;
 
 class SessionManager
 {
@@ -42,7 +43,11 @@ class SessionManager
 
     /**
      * Return session value of the key $key
-     * @return string
+     *
+     * @return string $key
+     * @return mixed $default
+     *
+     * @return mixed
      */
     public function get($key, $default = null)
     {
@@ -58,10 +63,43 @@ class SessionManager
     }
 
     /**
+     * Set user session data
+     *
+     * @param string $sid
+     */
+    public function setUserData($sid, $value)
+    {
+        $id = $this->get($sid);
+
+        Session::setId($id);
+        Session::start();
+
+        Session::put('sso_user', $value);
+        Session::save();
+    }
+
+    /**
+     * Retrieve user session data
+     *
+     * @return string
+     */
+    public function getUserData($sid)
+    {
+        $id = $this->get($sid);
+
+        Session::setId($id);
+        Session::start();
+
+        return Session::get('sso_user');
+    }
+
+    /**
      * Start a new session by resetting the session value
      */
     public function start($sid)
     {
-        $this->set($sid, '{}');
+        $id = Session::getId();
+
+        $this->set($sid, $id);
     }
 }
