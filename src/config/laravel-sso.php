@@ -30,7 +30,8 @@ return [
     ],
 
     /**
-     * Broker id for client configuration. Must be null on SSO Server
+     * Broker id for client configuration. Must be null on SSO Server. Must
+     * mactch any word [a-zA-Z0-9_]
      */
     'broker_client_id' => null,
 

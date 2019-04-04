@@ -117,13 +117,15 @@ class ServerControllerTest extends TestCase
         $checksum = hash('sha256', 'attach' . $token . $secret);
 
         // With redirect
-        $this->post('/sso/server/login', [
+        $response = $this->post('/sso/server/login', [
             'access_token' => $sid,
             'email' => 'admin@admin.com', 'password' => 'secret'
         ]);
 
-        $this->assertTrue($this->response->exception instanceof NotAttachedException);
-        $this->assertEquals($this->response->exception->getMessage(), 'Client broker not attached.');
+        $this->seeJson([
+            'code' => 'not_attached',
+            'message' => 'Client broker not attached.'
+        ]);
     }
 
     public function testShouldFailAuthenticate()
@@ -242,8 +244,10 @@ class ServerControllerTest extends TestCase
 
         $this->get('/sso/server/profile?access_token=' .$sid);
 
-        $this->assertTrue($this->response->exception instanceof UnauthorizedException);
-        $this->assertEquals($this->response->exception->getMessage(), 'Unauthorized');
+        $this->seeJson([
+            'code' => 'unauthorized',
+            'message' => 'Unauthorized.'
+        ]);
     }
 
     public function testShouldReturnUserProfile()
@@ -325,7 +329,9 @@ class ServerControllerTest extends TestCase
 
         $this->get('/sso/server/profile?access_token=' .$sid);
 
-        $this->assertTrue($this->response->exception instanceof UnauthorizedException);
-        $this->assertEquals($this->response->exception->getMessage(), 'Unauthorized');
+        $this->seeJson([
+            'code' => 'unauthorized',
+            'message' => 'Unauthorized.'
+        ]);
     }
 }

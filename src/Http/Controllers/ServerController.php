@@ -7,7 +7,6 @@ use Brexis\LaravelSSO\Session\ServerSessionManager;
 use Brexis\LaravelSSO\Http\Middleware\ValidateBroker;
 use Brexis\LaravelSSO\Http\Middleware\ServerAuthenticate;
 use Brexis\LaravelSSO\Http\Concerns\AuthenticateUsers;
-use Brexis\LaravelSSO\Exceptions\NotAttachedException;
 use Brexis\LaravelSSO\Events;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -78,14 +77,16 @@ class ServerController extends Controller
      *
      * @param \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
-     * @throw Brexis\LaravelSSO\Exceptions\NotAttachedException
      */
     public function login(Request $request)
     {
         $sid = $this->broker->getBrokerSessionId($request);
 
         if (is_null($this->session->get($sid))) {
-            throw new NotAttachedException(403, 'Client broker not attached.');
+            return response()->json([
+                'code' => 'not_attached',
+                'message' => 'Client broker not attached.'
+            ], 403);
         }
 
         if ($this->authenticate($request, $this)) {
