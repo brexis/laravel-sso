@@ -6,7 +6,6 @@ use Brexis\LaravelSSO\ServerBrokerManager;
 use Brexis\LaravelSSO\Session\ServerSessionManager;
 use Brexis\LaravelSSO\Http\Middleware\ServerAuthenticate;
 use Brexis\LaravelSSO\Http\Middleware\ValidateBroker;
-use Brexis\LaravelSSO\Exceptions\InvalidSessionIdException;
 use Brexis\LaravelSSO\Exceptions\UnauthorizedException;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -40,18 +39,15 @@ class MiddlewareTest extends TestCase
 
     public function testShouldThrownExceptionIfBrokerIsNotValid()
     {
-        $this->expectException(InvalidSessionIdException::class);
-        $this->expectExceptionMessage('Checksum failed: Client IP address may have changed');
-
         Models\App::create(['app_id' => 'appid', 'secret' => 'SeCrEt']);
 
         $token = $this->generateToken();
         $sid   = $this->generateSessionId('appid', $token, 'secret');
         $request = new Request(['access_token' => $sid]);
 
-        $this->validateBrokerMiddleware->handle($request, function () {
-            return (new Response())->setContent('<html></html>');
-        });
+        $response = $this->validateBrokerMiddleware->handle($request, function () { });
+
+        $this->assertEquals($response->getContent(), '{"code":"invalid_session_id","message":"Checksum failed: Client IP address may have changed"}');
     }
 
     public function testShouldNotThrownExceptionIfBrokerIsValid()
@@ -71,34 +67,26 @@ class MiddlewareTest extends TestCase
 
     public function testShouldThrownExceptionIfBrokerIsNotValidForServerAuthenticate()
     {
-        $this->expectException(InvalidSessionIdException::class);
-        $this->expectExceptionMessage('Checksum failed: Client IP address may have changed');
-
         Models\App::create(['app_id' => 'appid', 'secret' => 'SeCrEt']);
 
         $token = $this->generateToken();
         $sid   = $this->generateSessionId('appid', $token, 'secret');
         $request = new Request(['access_token' => $sid]);
 
-        $this->authenticateMiddleware->handle($request, function () {
-            return (new Response())->setContent('<html></html>');
-        });
+        $response = $this->authenticateMiddleware->handle($request, function () { });
+        $this->assertEquals($response->getContent(), '{"code":"invalid_session_id","message":"Checksum failed: Client IP address may have changed"}');
     }
 
     public function testShouldThrownExceptionIfAuthenticationFailed()
     {
-        $this->expectException(UnauthorizedException::class);
-        $this->expectExceptionMessage('Unauthorized');
-
         Models\App::create(['app_id' => 'appid', 'secret' => 'SeCrEt']);
 
         $token = $this->generateToken();
         $sid   = $this->generateSessionId('appid', $token, 'SeCrEt');
         $request = new Request(['access_token' => $sid]);
 
-        $this->authenticateMiddleware->handle($request, function () {
-            return (new Response())->setContent('<html></html>');
-        });
+        $response = $this->authenticateMiddleware->handle($request, function () { });
+        $this->assertEquals($response->getContent(), '{"code":"unauthorized","message":"Unauthorized."}');
     }
 
     public function testShouldSuccessAuthentication()

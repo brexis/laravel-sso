@@ -4,7 +4,6 @@ namespace Brexis\LaravelSSO\Test;
 
 use Brexis\LaravelSSO\ServerBrokerManager;
 use Brexis\LaravelSSO\SessionManager;
-use Brexis\LaravelSSO\Exceptions\UnauthorizedException;
 use Brexis\LaravelSSO\Exceptions\NotAttachedException;
 use Brexis\LaravelSSO\Events;
 use Illuminate\Http\Request;
@@ -110,10 +109,6 @@ class ServerControllerTest extends TestCase
 
     public function testShouldFailAuthenticateWithoutAttached()
     {
-        $this->withoutExceptionHandling();
-        $this->expectException(NotAttachedException::class);
-        $this->expectExceptionMessage('Client broker not attached.');
-
         $secret = 'SeCrEt';
         Models\App::create(['app_id' => 'appid', 'secret' => $secret]);
         $token = $this->generateToken();
@@ -124,6 +119,11 @@ class ServerControllerTest extends TestCase
         $response = $this->post('/sso/server/login', [
             'access_token' => $sid,
             'email' => 'admin@admin.com', 'password' => 'secret'
+        ]);
+
+        $response->assertJson([
+            'code' => 'not_attached',
+            'message' => 'Client broker not attached.'
         ]);
     }
 
@@ -232,10 +232,6 @@ class ServerControllerTest extends TestCase
 
     public function testShouldFailReturnUserProfile()
     {
-        $this->withoutExceptionHandling();
-        $this->expectException(UnauthorizedException::class);
-        $this->expectExceptionMessage('Unauthorized');
-
         $secret = 'SeCrEt';
         Models\App::create(['app_id' => 'appid', 'secret' => $secret]);
         $user = Models\User::create([
@@ -248,6 +244,11 @@ class ServerControllerTest extends TestCase
         $checksum = hash('sha256', 'attach' . $token . $secret);
 
         $response = $this->get('/sso/server/profile?access_token=' .$sid);
+
+        $response->assertJson([
+            'code' => 'unauthorized',
+            'message' => 'Unauthorized.'
+        ]);
     }
 
     public function testShouldReturnUserProfile()
@@ -295,10 +296,6 @@ class ServerControllerTest extends TestCase
     {
         Event::fake();
 
-        $this->withoutExceptionHandling();
-        $this->expectException(UnauthorizedException::class);
-        $this->expectExceptionMessage('Unauthorized');
-
         $secret = 'SeCrEt';
         Models\App::create(['app_id' => 'appid', 'secret' => $secret]);
         $user = Models\User::create([
@@ -333,6 +330,11 @@ class ServerControllerTest extends TestCase
             return $e->user->id === $user->id;
         });
 
-        $this->get('/sso/server/profile?access_token=' .$sid);
+        $response = $this->get('/sso/server/profile?access_token=' .$sid);
+
+        $response->assertJson([
+            'code' => 'unauthorized',
+            'message' => 'Unauthorized.'
+        ]);
     }
 }

@@ -5,7 +5,7 @@ namespace Brexis\LaravelSSO\Http\Middleware;
 use Closure;
 use Brexis\LaravelSSO\ServerBrokerManager;
 use Brexis\LaravelSSO\Session\ServerSessionManager;
-use Brexis\LaravelSSO\Exceptions\UnauthorizedException;
+use Brexis\LaravelSSO\Exceptions\InvalidSessionIdException;
 use Brexis\LaravelSSO\Events;
 
 use Illuminate\Support\Facades\Auth;
@@ -34,15 +34,26 @@ class ServerAuthenticate
     {
         $guard = $guard ?: Auth::guard();
 
-        $sid = $this->broker->getBrokerSessionId($request);
-        $this->broker->validateBrokerSessionId($sid);
+        try {
 
-        if ($user = $this->check($guard, $sid, $request)) {
-            event(new Events\Authenticated($user, $request));
-            return $next($request);
+            $sid = $this->broker->getBrokerSessionId($request);
+            $this->broker->validateBrokerSessionId($sid);
+
+            if ($user = $this->check($guard, $sid, $request)) {
+                event(new Events\Authenticated($user, $request));
+                return $next($request);
+            }
+
+            return response()->json([
+                'code' => 'unauthorized',
+                'message' => 'Unauthorized.'
+            ], 401);
+        } catch(InvalidSessionIdException $e) {
+            return response()->json([
+                'code' => 'invalid_session_id',
+                'message' => $e->getMessage()
+            ], 403);
         }
-
-        throw new UnauthorizedException(401, 'Unauthorized');
     }
 
     protected function check($guard, $sid)
