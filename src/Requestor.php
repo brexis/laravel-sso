@@ -7,7 +7,6 @@ use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7;
 use Brexis\LaravelSSO\Exceptions\InvalidSessionIdException;
 use Brexis\LaravelSSO\Exceptions\InvalidClientException;
-use Brexis\LaravelSSO\Exceptions\UnauthorizedException;
 use Brexis\LaravelSSO\Exceptions\NotAttachedException;
 
 /**
@@ -93,9 +92,6 @@ class Requestor
                     break;
                 case 'not_attached':
                     throw new NotAttachedException($status, $jsonResponse['message']);
-                    break;
-                case 'unauthorized':
-                    throw new UnauthorizedException($status, $jsonResponse['message']);
                     break;
             }
         }

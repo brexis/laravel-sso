@@ -3,6 +3,7 @@
 namespace Brexis\LaravelSSO;
 
 use Brexis\LaravelSSO\Exceptions\InvalidClientException;
+use Brexis\LaravelSSO\Exceptions\NotAttachedException;
 use Brexis\LaravelSSO\Session\ClientSessionManager;
 use Illuminate\Http\Request;
 
@@ -131,6 +132,16 @@ class ClientBrokerManager
     }
 
     /**
+     * Clear session token
+     */
+    public function clearClientToken()
+    {
+        $key = $this->sessionName();
+
+        $this->session->forget($key);
+    }
+
+    /**
      * Return the session name used to store session id.
      *
      * @return string
@@ -193,7 +204,7 @@ class ClientBrokerManager
         $sid   = $this->sessionId($token);
         $headers = $this->agentHeaders($request);
 
-        return $this->requestor->request($sid, 'POST', $url, $credentials, $headers);
+        return $this->sendRequestWithExceptionCatch($sid, 'POST', $url, $credentials, $headers);
     }
 
     /**
@@ -209,13 +220,13 @@ class ClientBrokerManager
         $sid   = $this->sessionId($token);
         $headers = $this->agentHeaders($request);
 
-        return $this->requestor->request($sid, 'GET', $url, [], $headers);
+        return $this->sendRequestWithExceptionCatch($sid, 'GET', $url, [], $headers);
     }
 
     /**
      * Send logout request
      * @param Illuminate\Http\Request $request
-     * 
+     *
      * @return bool
      */
     public function logout(Request $request = null)
@@ -225,8 +236,18 @@ class ClientBrokerManager
         $sid   = $this->sessionId($token);
         $headers = $this->agentHeaders($request);
 
-        $response = $this->requestor->request($sid, 'POST', $url, [], $headers);
+        $response = $this->sendRequestWithExceptionCatch($sid, 'POST', $url, [], $headers);
         return $response['success'] === true;
+    }
+
+    protected function sendRequestWithExceptionCatch($sid, $method, $url, $params = [], $headers = [])
+    {
+        try {
+            return $this->requestor->request($sid, $method, $url, $params, $headers);
+        } catch(NotAttachedException $e) {
+            $this->clearClientToken();
+            throw $e;
+        }
     }
 
     /**
