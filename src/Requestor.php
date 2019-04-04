@@ -7,7 +7,6 @@ use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7;
 use Brexis\LaravelSSO\Exceptions\InvalidSessionIdException;
 use Brexis\LaravelSSO\Exceptions\InvalidClientException;
-use Brexis\LaravelSSO\Exceptions\UnauthorizedException;
 use Brexis\LaravelSSO\Exceptions\NotAttachedException;
 
 /**

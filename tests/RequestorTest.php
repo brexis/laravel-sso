@@ -40,16 +40,6 @@ class RequestorTest extends TestCase
         $json = $requestor->request('ssid', 'POST', 'http://localhost');
     }
 
-    public function testShouldThrowUnauthorizedException()
-    {
-        $this->expectException(UnauthorizedException::class);
-        $this->expectExceptionMessage('Unauthorized.');
-
-        $client = $this->createMockClient(401, ['code' => 'unauthorized', 'message' => 'Unauthorized.']);
-        $requestor = new Requestor($client);
-        $json = $requestor->request('ssid', 'POST', 'http://localhost');
-    }
-
     public function testShouldThrowNotAttachedException()
     {
         $this->expectException(NotAttachedException::class);
