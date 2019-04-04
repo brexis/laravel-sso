@@ -94,6 +94,9 @@ class Requestor
                 case 'not_attached':
                     throw new NotAttachedException($status, $jsonResponse['message']);
                     break;
+                case 'unauthorized':
+                    throw new UnauthorizedException($status, $jsonResponse['message']);
+                    break;
             }
         }
     }
