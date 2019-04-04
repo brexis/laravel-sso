@@ -5,6 +5,10 @@ namespace Brexis\LaravelSSO;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7;
+use Brexis\LaravelSSO\Exceptions\InvalidSessionIdException;
+use Brexis\LaravelSSO\Exceptions\InvalidClientException;
+use Brexis\LaravelSSO\Exceptions\UnauthorizedException;
+use Brexis\LaravelSSO\Exceptions\NotAttachedException;
 
 /**
  * Encription class
@@ -57,8 +61,41 @@ class Requestor
                 \Log::debug(Psr7\str($e->getResponse()));
             }
 
+            $this->throwException($e);
+
             return false;
         }
     }
 
+    /**
+     * Trhow exception base on request exception
+     * @throw Brexis\LaravelSSO\Exceptions\InvalidSessionIdException
+     * @throw Brexis\LaravelSSO\Exceptions\InvalidClientException
+     * @throw Brexis\LaravelSSO\Exceptions\UnauthorizedException
+     * @throw Brexis\LaravelSSO\Exceptions\NotAttachedException
+     */
+    protected function throwException(RequestException $e)
+    {
+        $request = $e->getRequest();
+        $response = $e->getResponse();
+        $status = $response->getStatusCode();
+        $jsonResponse = json_decode($response->getBody()->getContents(), true);
+
+        if ($jsonResponse && array_key_exists('code', $jsonResponse)) {
+            switch($jsonResponse['code']) {
+                case 'invalid_session_id':
+                    throw new InvalidSessionIdException($jsonResponse['message'], $status);
+                    break;
+                case 'invalid_client_id':
+                    throw new InvalidClientException($jsonResponse['message']);
+                    break;
+                case 'not_attached':
+                    throw new NotAttachedException($status, $jsonResponse['message']);
+                    break;
+                case 'unauthorized':
+                    throw new UnauthorizedException($status, $jsonResponse['message']);
+                    break;
+            }
+        }
+    }
 }

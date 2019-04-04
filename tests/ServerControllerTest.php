@@ -4,8 +4,6 @@ namespace Brexis\LaravelSSO\Test;
 
 use Brexis\LaravelSSO\ServerBrokerManager;
 use Brexis\LaravelSSO\SessionManager;
-use Brexis\LaravelSSO\Exceptions\UnauthorizedException;
-use Brexis\LaravelSSO\Exceptions\NotAttachedException;
 use Brexis\LaravelSSO\Events;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
