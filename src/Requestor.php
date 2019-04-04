@@ -76,10 +76,12 @@ class Requestor
      */
     protected function throwException(RequestException $e)
     {
-        $request = $e->getRequest();
+        $request  = $e->getRequest();
         $response = $e->getResponse();
-        $status = $response->getStatusCode();
-        $jsonResponse = json_decode($response->getBody()->getContents(), true);
+        $status   = $response->getStatusCode();
+        $body     = $response->getBody();
+        $body->rewind();
+        $jsonResponse = json_decode($body->getContents(), true);
 
         if ($jsonResponse && array_key_exists('code', $jsonResponse)) {
             switch($jsonResponse['code']) {
