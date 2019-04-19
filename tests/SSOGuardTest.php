@@ -184,51 +184,6 @@ class SSOGuardTest extends TestCase
         );
     }
 
-    public function testShouldCheckWithBeforeAuthticatingButFail()
-    {
-        $this->app['config']->set(
-            'laravel-sso.before_authenticating',
-            function() { return false; }
-        );
-        $user = (object) ['id' => 1];
-
-        $this->broker->shouldReceive('profile')->andReturn([
-            'id' => 1,
-            'email' => 'admin@test.com'
-        ]);
-
-        $this->provider->shouldReceive('retrieveByCredentials')
-             ->with(['email' => 'admin@test.com'])
-             ->andReturn($user);
-
-        $this->assertFalse($this->guard->check());
-    }
-
-    public function testShouldCheckWithBeforeAuthticating()
-    {
-        $this->app['config']->set(
-            'laravel-sso.before_authenticating',
-            function() { return true; }
-        );
-        $user = (object) ['id' => 1];
-
-        $this->broker->shouldReceive('profile')->andReturn([
-            'id' => 1,
-            'email' => 'admin@test.com'
-        ]);
-
-        $this->provider->shouldReceive('retrieveByCredentials')
-             ->with(['email' => 'admin@test.com'])
-             ->andReturn($user);
-
-        $this->dispatcher->shouldReceive('dispatch')->with(
-            Mockery::on(function($e) use ($user) {
-                return $e == new Events\Authenticated($user, null);
-            })
-        );
-        $this->assertTrue($this->guard->check());
-    }
-
     public function testShouldLogout()
     {
         $this->broker->shouldReceive('logout')->andReturn(true);

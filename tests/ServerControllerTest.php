@@ -227,6 +227,38 @@ class ServerControllerTest extends TestCase
         $this->seeJson($user->toArray());
     }
 
+    public function testShouldFailAuthenticatingUserWithAfterAuthantication()
+    {
+        Event::fake();
+        $this->app['config']->set(
+            'laravel-sso.after_authenticating',
+            function() { return false; }
+        );
+
+        $secret = 'SeCrEt';
+        Models\App::create(['app_id' => 'appid', 'secret' => $secret]);
+        $user = Models\User::create([
+            'username' => 'admin', 'email' => 'admin@admin.com',
+            'password' => bcrypt('secret')
+        ]);
+
+        $token = $this->generateToken();
+        $sid   = $this->generateSessionId('appid', $token, $secret);
+        $checksum = hash('sha256', 'attach' . $token . $secret);
+
+        $query = http_build_query([
+            'broker' => 'appid', 'token' => $token, 'checksum' => $checksum
+        ]);
+        $this->json('GET', '/sso/server/attach?'. $query);
+
+        $this->post('/sso/server/login', [
+            'access_token' => $sid,
+            'username' => 'admin', 'password' => 'secret', 'login' => 'username'
+        ]);
+
+        $this->assertResponseStatus(401);
+    }
+
     public function testShouldFailReturnUserProfile()
     {
         $secret = 'SeCrEt';
@@ -285,6 +317,38 @@ class ServerControllerTest extends TestCase
 
         $this->assertResponseOk();
         $this->seeJson(['id' => $user->id]);
+    }
+
+    public function testShouldFailReturningUserProfileWithAfterAuthanticating()
+    {
+        $secret = 'SeCrEt';
+        Models\App::create(['app_id' => 'appid', 'secret' => $secret]);
+        $user = Models\User::create([
+            'username' => 'admin', 'email' => 'admin@admin.com',
+            'password' => bcrypt('secret')
+        ]);
+
+        $token = $this->generateToken();
+        $sid   = $this->generateSessionId('appid', $token, $secret);
+        $checksum = hash('sha256', 'attach' . $token . $secret);
+
+        $query = http_build_query([
+            'broker' => 'appid', 'token' => $token, 'checksum' => $checksum
+        ]);
+        $this->json('GET', '/sso/server/attach?'. $query);
+
+        $this->post('/sso/server/login', [
+            'access_token' => $sid,
+            'email' => 'admin@admin.com', 'password' => 'secret'
+        ]);
+
+        $this->app['config']->set(
+            'laravel-sso.after_authenticating',
+            function() { return false; }
+        );
+        $this->get('/sso/server/profile?access_token=' .$sid);
+
+        $this->assertResponseStatus(401);
     }
 
     public function testShouldLogoutUser()
