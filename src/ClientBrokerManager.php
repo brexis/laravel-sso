@@ -204,7 +204,7 @@ class ClientBrokerManager
         $sid   = $this->sessionId($token);
         $headers = $this->agentHeaders($request);
 
-        return $this->sendRequestWithExceptionCatch($sid, 'POST', $url, $credentials, $headers);
+        return $this->requestor->request($sid, 'POST', $url, $credentials, $headers);
     }
 
     /**
@@ -220,7 +220,7 @@ class ClientBrokerManager
         $sid   = $this->sessionId($token);
         $headers = $this->agentHeaders($request);
 
-        return $this->sendRequestWithExceptionCatch($sid, 'GET', $url, [], $headers);
+        return $this->requestor->request($sid, 'GET', $url, [], $headers);
     }
 
     /**
@@ -236,18 +236,8 @@ class ClientBrokerManager
         $sid   = $this->sessionId($token);
         $headers = $this->agentHeaders($request);
 
-        $response = $this->sendRequestWithExceptionCatch($sid, 'POST', $url, [], $headers);
+        $response = $this->requestor->request($sid, 'POST', $url, [], $headers);
         return $response['success'] === true;
-    }
-
-    protected function sendRequestWithExceptionCatch($sid, $method, $url, $params = [], $headers = [])
-    {
-        try {
-            return $this->requestor->request($sid, $method, $url, $params, $headers);
-        } catch(NotAttachedException $e) {
-            $this->clearClientToken();
-            throw $e;
-        }
     }
 
     /**
