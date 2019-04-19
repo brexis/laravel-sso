@@ -107,6 +107,10 @@ class SSOGuard implements Guard
     {
         $this->user = $this->retrieveFromPayload($payload);
 
+        $this->user = $this->beforeAuthenticatingUser(
+            $this->user, $this->request
+        );
+
         $this->updatePayload($payload);
 
         if ($this->user) {
@@ -114,6 +118,27 @@ class SSOGuard implements Guard
         }
 
         return $this->user;
+    }
+
+    /**
+     * Do additional verification by calling before_authenticating closure.
+     *
+     * @param  \Illuminate\Contracts\Auth\Authenticatable $user
+     * @param  \Symfony\Component\HttpFoundation\Request|null $request
+     * @return \Illuminate\Contracts\Auth\Authenticatable
+     */
+    protected function beforeAuthenticatingUser($user, $request)
+    {
+        $before_authenticating = config('laravel-sso.before_authenticating');
+
+        if (
+            $user && is_callable($before_authenticating) &&
+            !$before_authenticating($user, $request)
+        ) {
+            return null; // Reset user to null if closur return false
+        }
+
+        return $user;
     }
 
     /**

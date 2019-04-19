@@ -74,6 +74,16 @@ return [
     'user_info' => null,
 
     /**
+     * Closure that is called before a user is authenticated. Used for
+     * additional verification, for exemple if you don't want to allow
+     * unverified users. This function should return a boolean.
+     * Eg. 'before_authenticating' => function($user, $request) {
+     *      return $user->verified;
+     * }
+     */
+    'before_authenticating' => null,
+
+    /**
      * Enable debug mode
      */
     'debug' => false
