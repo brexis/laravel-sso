@@ -33,16 +33,23 @@ class ServerAuthenticate
     public function handle($request, Closure $next, $guard = null)
     {
         $guard = $guard ?: Auth::guard();
-        
+        $sid = $this->broker->getBrokerSessionId($request);
+
+        if (is_null($this->session->get($sid))) {
+            return response()->json([
+                'code' => 'not_attached',
+                'message' => 'Client broker not attached.'
+            ], 403);
+        }
+
         try {
-            $sid = $this->broker->getBrokerSessionId($request);
             $this->broker->validateBrokerSessionId($sid);
-    
+
             if ($user = $this->check($guard, $sid, $request)) {
                 event(new Events\Authenticated($user, $request));
                 return $next($request);
             }
-    
+
             return response()->json([
                 'code' => 'unauthorized',
                 'message' => 'Unauthorized.'

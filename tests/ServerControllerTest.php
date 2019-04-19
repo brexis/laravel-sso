@@ -275,8 +275,8 @@ class ServerControllerTest extends TestCase
         $this->get('/sso/server/profile?access_token=' .$sid);
 
         $this->seeJson([
-            'code' => 'unauthorized',
-            'message' => 'Unauthorized.'
+            'code' => 'not_attached',
+            'message' => 'Client broker not attached.'
         ]);
     }
 
