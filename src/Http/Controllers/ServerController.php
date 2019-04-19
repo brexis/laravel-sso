@@ -110,7 +110,14 @@ class ServerController extends Controller
      */
     public function profile(Request $request)
     {
-        $user = $this->guard()->user();
+        $user = $this->afterAuthenticatingUser(
+            $this->guard()->user(),
+            $request
+        );
+
+        if (!$user) {
+            return response()->json([], 401);
+        }
 
         return response()->json(
             $this->userInfo($user, $request)

@@ -39,9 +39,11 @@ trait AuthenticateUsers
      */
     protected function attemptLogin(Request $request)
     {
-        return $this->guard()->once(
+        $user = $this->guard()->once(
             $this->loginCredentials($request)
         );
+
+        return $this->afterAuthenticatingUser($user, $request);
     }
 
     /**
@@ -109,5 +111,27 @@ trait AuthenticateUsers
         }
 
         return $user->toArray();
+    }
+
+    /**
+     * Do additional verification by calling after_authenticating closure.
+     *
+     * @param  \Illuminate\Contracts\Auth\Authenticatable $user
+     * @param  \Symfony\Component\HttpFoundation\Request|null $request
+     * @return \Illuminate\Contracts\Auth\Authenticatable
+     */
+    protected function afterAuthenticatingUser($user, $request)
+    {
+        $closure = config('laravel-sso.after_authenticating');
+        $broker = $this->broker->getBrokerFromRequest($request);
+
+        if (
+            $user && is_callable($closure) &&
+            !$closure($user, $broker, $request)
+        ) {
+            return null; // Reset user to null if closur return false
+        }
+
+        return $user;
     }
 }
