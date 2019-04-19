@@ -73,7 +73,6 @@ class MiddlewareTest extends TestCase
         $request = new Request(['access_token' => $sid]);
 
         $response = $this->authenticateMiddleware->handle($request, function () { });
-
         $this->assertEquals($response->getContent(), '{"code":"invalid_session_id","message":"Checksum failed: Client IP address may have changed"}');
     }
 
@@ -86,7 +85,6 @@ class MiddlewareTest extends TestCase
         $request = new Request(['access_token' => $sid]);
 
         $response = $this->authenticateMiddleware->handle($request, function () { });
-
         $this->assertEquals($response->getContent(), '{"code":"unauthorized","message":"Unauthorized."}');
     }
 
