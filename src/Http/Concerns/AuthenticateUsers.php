@@ -13,9 +13,7 @@ trait AuthenticateUsers
      */
     protected function authenticate(Request $request, $broker)
     {
-        if ($this->attemptLogin($request)) {
-            $user = $this->guard()->user();
-
+        if ($user = $this->attemptLogin($request)) {
             event(new Events\Authenticated($user, $request));
 
             $sid = $this->broker->getBrokerSessionId($request);
@@ -35,15 +33,18 @@ trait AuthenticateUsers
      *
      * @param Illuminate\Http\Request $request
      *
-     * @return mixed
+     * @return \Illuminate\Contracts\Auth\Authenticatable|null
      */
     protected function attemptLogin(Request $request)
     {
-        $user = $this->guard()->once(
+        if ($this->guard()->once(
             $this->loginCredentials($request)
-        );
+        )) {
+            $user = $this->guard()->user();
+            return $this->afterAuthenticatingUser($user, $request);
+        }
 
-        return $this->afterAuthenticatingUser($user, $request);
+        return null;
     }
 
     /**

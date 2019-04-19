@@ -70,6 +70,7 @@ class MiddlewareTest extends TestCase
 
         $token = $this->generateToken();
         $sid   = $this->generateSessionId('appid', $token, 'secret');
+        $this->session->start($sid);
         $request = new Request(['access_token' => $sid]);
 
         $response = $this->authenticateMiddleware->handle($request, function () { });
@@ -82,6 +83,7 @@ class MiddlewareTest extends TestCase
 
         $token = $this->generateToken();
         $sid   = $this->generateSessionId('appid', $token, 'SeCrEt');
+        $this->session->start($sid);
         $request = new Request(['access_token' => $sid]);
 
         $response = $this->authenticateMiddleware->handle($request, function () { });
