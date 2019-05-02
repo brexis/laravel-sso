@@ -56,12 +56,12 @@ class Requestor
             return json_decode($response->getBody()->getContents(), true);
         } catch (RequestException $e) {
             if ($this->debugEnabled()) {
-                if ($e->getRequest()) {
-                    \Log::debug(Psr7\str($e->getRequest()));
+                if ($request = $e->getRequest()) {
+                    \Log::debug(Psr7\str($request));
                 }
 
-                if ($e->getResponse()) {
-                    \Log::debug(Psr7\str($e->getResponse()));
+                if ($response = $e->getResponse()) {
+                    \Log::debug(Psr7\str($response));
                 }
             }
 
