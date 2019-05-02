@@ -55,17 +55,22 @@ class Requestor
 
             return json_decode($response->getBody()->getContents(), true);
         } catch (RequestException $e) {
+            $req = $e->getRequest();
+            $res = $e->getResponse();
+
             if ($this->debugEnabled()) {
-                if ($req = $e->getRequest()) {
+                if ($req) {
                     \Log::debug(Psr7\str($req));
                 }
 
-                if ($res = $e->getResponse()) {
+                if ($res) {
                     \Log::debug(Psr7\str($res));
                 }
             }
 
-            $this->throwException($e);
+            if ($req && $res) {
+                $this->throwException($req, $res);
+            }
 
             return false;
         }
@@ -78,12 +83,10 @@ class Requestor
      * @throw Brexis\LaravelSSO\Exceptions\UnauthorizedException
      * @throw Brexis\LaravelSSO\Exceptions\NotAttachedException
      */
-    protected function throwException(RequestException $e)
+    protected function throwException($request, $response)
     {
-        $request  = $e->getRequest();
-        $response = $e->getResponse();
-        $status   = $response->getStatusCode();
-        $body     = $response->getBody();
+        $status = $response->getStatusCode();
+        $body   = $response->getBody();
         $body->rewind();
         $jsonResponse = json_decode($body->getContents(), true);
 
