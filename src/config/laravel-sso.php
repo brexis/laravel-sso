@@ -86,5 +86,23 @@ return [
     /**
      * Enable debug mode
      */
-    'debug' => false
+    'debug' => false,
+
+    /**
+     * Closure that save the user in the client local database.
+     * Eg. 'register_user' => function ($data) {
+     *    $user = \App\Models\User::create([
+     *        'username' => $data['username'],
+     *        'email' => $data['email'],
+     *        'admin' => $data['admin'],
+     *        'password' => '',
+     *    ]);
+     *
+     * $roles = \App\Models\Role::whereIn('role', $data['roles'])->pluck('id');
+     * $user->roles()->sync($roles);
+     *
+     * return $user;
+     * }
+     */
+    'register_user' => null,
 ];

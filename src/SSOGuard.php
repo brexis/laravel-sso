@@ -130,9 +130,23 @@ class SSOGuard implements Guard
             return false;
         }
 
-        return $this->provider->retrieveByCredentials([
+        $user = $this->provider->retrieveByCredentials([
             $username => $payload[$username]
         ]);
+
+        if (empty($user)) {
+            $ssoConfig = include(config_path('laravel-sso.php'));
+            $closure = isset($ssoConfig["register_user"]) ? $ssoConfig["register_user"] : '';
+
+            if (is_callable($closure)) {
+                $closure($payload);
+                $user = $this->provider->retrieveByCredentials([
+                    $username => $payload[$username]
+                ]);
+            }
+        }
+
+        return $user;
     }
 
     /**
