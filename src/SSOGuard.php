@@ -135,8 +135,13 @@ class SSOGuard implements Guard
         ]);
 
         if (empty($user)) {
-            $ssoConfig = include(config_path('laravel-sso.php'));
-            $closure = isset($ssoConfig["register_user"]) ? $ssoConfig["register_user"] : '';
+            try {
+                $ssoConfig = include(config_path('laravel-sso.php'));
+            } catch(\ErrorException $ex) {
+                $ssoConfig = [];
+            }
+            
+            $closure = array_key_exists('register_user', $ssoConfig) ? $ssoConfig["register_user"] : '';
 
             if (is_callable($closure)) {
                 $closure($payload);
