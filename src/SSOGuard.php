@@ -134,17 +134,10 @@ class SSOGuard implements Guard
             $username => $payload[$username]
         ]);
 
-        if (empty($user)) {
-            try {
-                $ssoConfig = include(config_path('laravel-sso.php'));
-            } catch(\ErrorException $ex) {
-                $ssoConfig = [];
-            }
-            
-            $closure = array_key_exists('register_user', $ssoConfig) ? $ssoConfig["register_user"] : '';
+        if (!$user) {
+            $userCreateStrategy = config_path('laravel-sso.user_create_strategy');
 
-            if (is_callable($closure)) {
-                $closure($payload);
+            if (is_callable($userCreateStrategy) && $userCreateStrategy($payload)) {
                 $user = $this->provider->retrieveByCredentials([
                     $username => $payload[$username]
                 ]);

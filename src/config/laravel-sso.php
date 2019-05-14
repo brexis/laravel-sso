@@ -90,7 +90,7 @@ return [
 
     /**
      * Closure that save the user in the client local database.
-     * Eg. 'register_user' => function ($data) {
+     * Eg. 'user_create_strategy' => function ($data) {
      *    $user = \App\Models\User::create([
      *        'username' => $data['username'],
      *        'email' => $data['email'],
@@ -104,5 +104,5 @@ return [
      * return $user;
      * }
      */
-    'register_user' => null,
+    'user_create_strategy' => null,
 ];

@@ -184,6 +184,44 @@ class SSOGuardTest extends TestCase
         );
     }
 
+    public function testShouldAttemptToConnectAndSucceedWithUserStrategy()
+    {
+        $user = new class
+        {
+            use \Brexis\LaravelSSO\Traits\SSOUser;
+            public $id = 1;
+        };
+
+        $this->app['config']->set('laravel-sso.user_create_strategy', function($data) use ($user) {
+            return $user;
+        });
+
+        $credentials = ['email' => 'admin@test.com'];
+        $this->broker->shouldReceive('login')->with([
+            'email' => 'admin@test.com',
+            'remember' => true
+        ], null)->andReturn(['email' => 'admin@test.com']);
+
+        $this->provider->shouldReceive('retrieveByCredentials')
+            ->with(['email' => 'admin@test.com'])
+            ->andReturn(null, $user);
+
+        $this->dispatcher->shouldReceive('dispatch')->once()->with(
+            Mockery::type(Events\Authenticated::class)
+        );
+        $this->dispatcher->shouldReceive('dispatch')->once()->with(
+            Mockery::type(Events\LoginSucceeded::class)
+        );
+
+        $this->assertNotFalse($this->guard->attempt($credentials, true));
+        $this->assertTrue($this->guard->check());
+        $this->assertEquals($this->guard->user()->id, 1);
+        $this->assertEquals(
+            $this->guard->user()->getPayload(),
+            ['email' => 'admin@test.com']
+        );
+    }
+
     public function testShouldLogout()
     {
         $this->broker->shouldReceive('logout')->andReturn(true);
