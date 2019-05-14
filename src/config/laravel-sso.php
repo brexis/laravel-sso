@@ -86,5 +86,18 @@ return [
     /**
      * Enable debug mode
      */
-    'debug' => false
+    'debug' => false,
+
+    /**
+     * Closure that save the user in the client local database.
+     * Eg. 'user_create_strategy' => function ($data) {
+     *    return \App\Models\User::create([
+     *        'username' => $data['username'],
+     *        'email' => $data['email'],
+     *        'admin' => $data['admin'],
+     *        'password' => '',
+     *    ]);
+     * }
+     */
+    'user_create_strategy' => null,
 ];

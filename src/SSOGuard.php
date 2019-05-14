@@ -124,15 +124,49 @@ class SSOGuard implements Guard
      */
     protected function retrieveFromPayload($payload)
     {
-        $username = config('laravel-sso.broker_client_username', 'email');
-
-        if (!array_key_exists($username, $payload)) {
+        if (!$this->usernameExistsInPayload($payload)) {
             return false;
         }
+
+        $user = $this->retrieveByCredentials($payload);
+
+        if (!$user) {
+            $userCreateStrategy = config('laravel-sso.user_create_strategy');
+
+            if (is_callable($userCreateStrategy) && $userCreateStrategy($payload)) {
+                $user = $this->retrieveByCredentials($payload);
+            }
+        }
+
+        return $user;
+    }
+
+    /**
+     * Retrieve user by credentials from payload
+     *
+     * @param mixed $payload
+     * @return mixed
+     */
+    protected function retrieveByCredentials($payload)
+    {
+        $username = config('laravel-sso.broker_client_username', 'email');
 
         return $this->provider->retrieveByCredentials([
             $username => $payload[$username]
         ]);
+    }
+
+    /**
+     * Check if config brocker username exists in payload
+     *
+     * @param mixed $payload
+     * @return bool
+     */
+    protected function usernameExistsInPayload($payload)
+    {
+        $username = config('laravel-sso.broker_client_username', 'email');
+
+        return array_key_exists($username, $payload);
     }
 
     /**
