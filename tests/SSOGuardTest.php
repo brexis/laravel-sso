@@ -184,10 +184,35 @@ class SSOGuardTest extends TestCase
         );
     }
 
+    public function testShouldAttemptToConnectAndfailedWithoutUserStrategy()
+    {
+        $user = new class {
+            use \Brexis\LaravelSSO\Traits\SSOUser;
+            public $id = 1;
+        };
+
+        $credentials = ['email' => 'admin@test.com'];
+        $this->broker->shouldReceive('login')->with([
+            'email' => 'admin@test.com',
+            'remember' => true
+        ], null)->andReturn(['email' => 'admin@test.com']);
+
+        $this->provider->shouldReceive('retrieveByCredentials')
+            ->with(['email' => 'admin@test.com'])
+            ->andReturn(null);
+
+        $this->dispatcher->shouldReceive('dispatch')->with(
+            Mockery::on(function($e) use ($credentials) {
+                return $e == new Events\LoginFailed($credentials, null);
+            })
+        );
+
+        $this->assertNull($this->guard->attempt($credentials, true));
+    }
+
     public function testShouldAttemptToConnectAndSucceedWithUserStrategy()
     {
-        $user = new class
-        {
+        $user = new class {
             use \Brexis\LaravelSSO\Traits\SSOUser;
             public $id = 1;
         };

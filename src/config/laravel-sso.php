@@ -91,17 +91,12 @@ return [
     /**
      * Closure that save the user in the client local database.
      * Eg. 'user_create_strategy' => function ($data) {
-     *    $user = \App\Models\User::create([
+     *    return \App\Models\User::create([
      *        'username' => $data['username'],
      *        'email' => $data['email'],
      *        'admin' => $data['admin'],
      *        'password' => '',
      *    ]);
-     *
-     * $roles = \App\Models\Role::whereIn('role', $data['roles'])->pluck('id');
-     * $user->roles()->sync($roles);
-     *
-     * return $user;
      * }
      */
     'user_create_strategy' => null,
