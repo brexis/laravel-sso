@@ -172,4 +172,40 @@ class ServerController extends Controller
             return redirect()->away($return_url);
         }
     }
+
+    public function retrieveUsers(Request $request)
+    {
+        if(!$request->has('filters')) {
+            return response()->json([]);
+        }
+
+        $app = $this->broker->getBrokerFromRequest($request);
+
+        $query =\DB::table('users')
+            ->join('authorizations', 'authorizations.user_id', 'users.id')
+            ->join('roles', 'roles.id', 'authorizations.role_id')
+            ->where('authorizations.app_id', $app->id);
+
+        $filters = $request->input('filters');
+
+        if(array_key_exists('roles', $filters)) {
+            $roles = $filters['roles'];
+
+            if (!is_array($roles)) {
+                $roles = [$roles];
+            }
+
+            $query->whereIn('roles.name', $roles);
+        }
+
+        if (array_key_exists('verified', $filters)) {
+            $query->whereIn('roles.name', $filters['verified']);
+        }
+        
+        $users = $query
+            ->select('users.*', 'roles.name as role')
+            ->get();
+
+        return response()->json($users);
+    }
 }

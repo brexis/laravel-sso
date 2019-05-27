@@ -258,4 +258,20 @@ class ClientBrokerManager
 
         return $headers;
     }
+
+    /**
+     * Retrieve users on SSO
+     * @param Illuminate\Http\Request $request
+     *
+     * @return array
+     */
+    public function retrieveUsers(Request $request = null, $filters = [])
+    {
+        $url   = $this->serverUrl('/users');
+        $token = $this->getClientToken();
+        $sid   = $this->sessionId($token);
+        $headers = $this->agentHeaders($request);
+
+        return $this->requestor->request($sid, 'GET', $url, $filters, $headers);
+    }
 }

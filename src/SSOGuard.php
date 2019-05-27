@@ -301,4 +301,9 @@ class SSOGuard implements Guard
             $this->events->dispatch(new Events\Logout($user));
         }
     }
+
+    public function retrieveUsers($filters)
+    {
+        return $this->broker->retrieveUsers($this->request, ['filters' => $filters]);
+    }
 }
