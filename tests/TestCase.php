@@ -52,6 +52,25 @@ abstract class TestCase extends OrchestraTestCase
             $table->string('secret');
             $table->timestamps();
         });
+
+        $app['db']->connection()->getSchemaBuilder()->create('roles', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('name');
+            $table->unsignedInteger('app_id')->nullable();
+            $table->timestamps();
+            $table->foreign('app_id')->references('id')->on('apps');
+        });
+
+        $app['db']->connection()->getSchemaBuilder()->create('authorizations', function (Blueprint $table) {
+            $table->increments('id');
+            $table->unsignedInteger('user_id');
+            $table->unsignedInteger('app_id');
+            $table->unsignedInteger('role_id');
+            $table->foreign('user_id')->references('id')->on('users');
+            $table->foreign('app_id')->references('id')->on('apps');
+            $table->foreign('role_id')->references('id')->on('roles');
+            $table->timestamps();
+        });
     }
 
     protected function generateToken()

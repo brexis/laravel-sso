@@ -203,7 +203,8 @@ class ServerController extends Controller
         }
         
         $users = $query
-            ->select('users.*', 'roles.name as role')
+            ->select('users.id', 'users.username', 'users.email', 'users.created_at', 
+                'users.updated_at', 'roles.name as role')
             ->get();
 
         return response()->json($users);

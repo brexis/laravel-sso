@@ -402,4 +402,78 @@ class ServerControllerTest extends TestCase
             'message' => 'Unauthorized.'
         ]);
     }
+
+    public function testShouldFailRetrieveUsers()
+    {
+        $this->withoutExceptionHandling();
+
+        $secret = 'SeCrEt';
+        $app = Models\App::create(['app_id' => 'appid', 'secret' => $secret]);
+        $user = Models\User::create([
+            'username' => 'admin', 'email' => 'admin@admin.com',
+            'password' => bcrypt('secret')
+        ]);
+
+        $token = $this->generateToken();
+        $sid   = $this->generateSessionId('appid', $token, $secret);
+        $checksum = hash('sha256', 'attach' . $token . $secret);
+
+        $query = http_build_query([
+            'broker' => 'appid', 'token' => $token, 'checksum' => $checksum
+        ]);
+        $this->json('GET', '/sso/server/attach?' . $query);
+
+        $response = $this->post('/sso/server/login', [
+            'access_token' => $sid,
+            'email' => 'admin@admin.com', 'password' => 'secret'
+        ]);
+
+        $response = $this->get("/sso/server/users?filters%5B'roles'%5D=admin&access_token=" . $sid);
+
+        $response->assertOk();
+        $response->assertStatus(200);
+        $response->assertJsonCount(0);
+    }
+
+    public function testShouldRetrieveUsers()
+    {
+        $this->withoutExceptionHandling();
+
+        $secret = 'SeCrEt';
+        $app = Models\App::create(['app_id' => 'appid', 'secret' => $secret]);
+        $user = Models\User::create([
+            'username' => 'admin', 'email' => 'admin@admin.com',
+            'password' => bcrypt('secret')
+        ]);
+        $role = Models\Role::create([
+            'name' => 'admin',
+            'app_id' => $app->id,
+        ]);
+        Models\Authorization::create([
+            'user_id' => $user->id,
+            'app_id' => $app->id,
+            'role_id' => $role->id,
+        ]);
+
+        $token = $this->generateToken();
+        $sid   = $this->generateSessionId('appid', $token, $secret);
+        $checksum = hash('sha256', 'attach' . $token . $secret);
+
+        $query = http_build_query([
+            'broker' => 'appid', 'token' => $token, 'checksum' => $checksum
+        ]);
+        $this->json('GET', '/sso/server/attach?' . $query);
+
+        $response = $this->post('/sso/server/login', [
+            'access_token' => $sid,
+            'email' => 'admin@admin.com', 'password' => 'secret'
+        ]);
+
+        $response = $this->get( "/sso/server/users?filters%5B'roles'%5D=admin&access_token=" . $sid);
+
+        $response->assertOk();
+        $response->assertStatus(200);
+        $response->assertSee('"id":"' . $user->id . '"');
+        $response->assertJsonCount(1);
+    }
 }
