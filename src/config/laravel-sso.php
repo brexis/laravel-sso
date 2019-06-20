@@ -100,4 +100,20 @@ return [
      * }
      */
     'user_create_strategy' => null,
+
+    /**
+     * Commands are customs additionals methods that could be called
+     * from the client. For exemple if you want to check the authenticated
+     * user role.
+     */
+    'commands' => [
+        /**
+         * Should return an array
+         * 'hasRole' => function($user, $broker, $request) {
+         *     $role = $request->input('role');
+         *     $success = $user->roles->contains($role);
+         *     return ['success' => $success];
+         * }
+         */
+    ]
 ];

@@ -10,6 +10,7 @@ Route::middleware('sso-api')->group(function() {
         Route::post('login', 'Brexis\LaravelSSO\Http\Controllers\ServerController@login')->name('login');
         Route::get('profile', 'Brexis\LaravelSSO\Http\Controllers\ServerController@profile')->name('profile');
         Route::post('logout', 'Brexis\LaravelSSO\Http\Controllers\ServerController@logout')->name('logout');
+        Route::post('commands/{command}', 'Brexis\LaravelSSO\Http\Controllers\ServerController@commands')->name('command');
     });
 
     Route::prefix('sso/client')->name('sso.client.')->group(function() {

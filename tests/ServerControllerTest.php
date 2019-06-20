@@ -402,4 +402,60 @@ class ServerControllerTest extends TestCase
             'message' => 'Unauthorized.'
         ]);
     }
+
+    public function testShouldRunCommands()
+    {
+        Event::fake();
+
+        $secret = 'SeCrEt';
+        Models\App::create(['app_id' => 'appid', 'secret' => $secret]);
+        $user = Models\User::create([
+            'username' => 'admin', 'email' => 'admin@admin.com',
+            'password' => bcrypt('secret')
+        ]);
+
+        $token = $this->generateToken();
+        $sid   = $this->generateSessionId('appid', $token, $secret);
+        $checksum = hash('sha256', 'attach' . $token . $secret);
+
+        $query = http_build_query([
+            'broker' => 'appid', 'token' => $token, 'checksum' => $checksum
+        ]);
+        $this->json('GET', '/sso/server/attach?'. $query);
+
+        $response = $this->post('/sso/server/login', [
+            'access_token' => $sid,
+            'email' => 'admin@admin.com', 'password' => 'secret'
+        ]);
+
+        $response = $this->get('/sso/server/profile?access_token=' .$sid);
+
+        $response->assertOk();
+        $response->assertJson($user->toArray());
+
+        $response = $this->post('/sso/server/commands/check', [
+            'access_token' => $sid
+        ]);
+
+        $response->assertJson(['message' => 'Command not found.']);
+
+        $this->app['config']->set('laravel-sso.commands', [
+            'check' => function($user, $broker, $request) {
+                return [
+                    'success' => true,
+                    'foo' => $request->input('foo')
+                ];
+            }
+        ]);
+
+        $response = $this->post('/sso/server/commands/check', [
+            'access_token' => $sid,
+            'foo' => 'bar'
+        ]);
+
+        $response->assertJson([
+            'success' => true,
+            'foo' => 'bar'
+        ]);
+    }
 }

@@ -249,4 +249,25 @@ class ClientBrokerManagerTest extends TestCase
             'SSO-REMOTE-ADDR' => ['123.44.90.3']
         ]);
     }
+
+    public function testShouldSendCommandRequest()
+    {
+        $this->app['config']->set('laravel-sso.broker_client_id', 'app_id');
+        $this->app['config']->set('laravel-sso.broker_client_secret', 'app_secret');
+        $this->app['config']->set('laravel-sso.broker_server_url', 'http://localhost/sso/server');
+
+        $client = $this->mockHttpClient(200, ['success' => true]);
+
+        $broker = new ClientBrokerManager($client);
+        $token = $broker->generateClientToken();
+        $broker->saveClientToken($token);
+        $sid = $broker->sessionId($token);
+
+        $broker->commands('check_role', ['foo' => 'bar']);
+
+        $this->exceptHttpRequest('/sso/server/commands/check_role', 'POST', [
+            'Authorization' => ['Bearer ' . $sid],
+            'Accept' => ['application/json']
+        ], null, ['foo' => 'bar']);
+    }
 }
