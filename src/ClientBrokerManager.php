@@ -211,7 +211,7 @@ class ClientBrokerManager
      * Send profile request
      * @param Illuminate\Http\Request $request
      *
-     * @return bool|array
+     * @return mix
      */
     public function profile(Request $request = null)
     {
@@ -221,6 +221,25 @@ class ClientBrokerManager
         $headers = $this->agentHeaders($request);
 
         return $this->requestor->request($sid, 'GET', $url, [], $headers);
+    }
+
+    /**
+     * Send a command request
+     *
+     * @param string $command
+     * @param array $params
+     * @param Illuminate\Http\Request $request
+     *
+     * @return mix
+     */
+    public function commands($command, $params = [], Request $request = null)
+    {
+        $url   = $this->serverUrl("/commands/$command");
+        $token = $this->getClientToken();
+        $sid   = $this->sessionId($token);
+        $headers = $this->agentHeaders($request);
+
+        return $this->requestor->request($sid, 'POST', $url, $params, $headers);
     }
 
     /**
