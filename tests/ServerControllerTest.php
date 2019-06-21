@@ -417,16 +417,6 @@ class ServerControllerTest extends TestCase
         ]);
         $this->json('GET', '/sso/server/attach?'. $query);
 
-        $this->post('/sso/server/login', [
-            'access_token' => $sid,
-            'email' => 'admin@admin.com', 'password' => 'secret'
-        ]);
-
-        $this->get('/sso/server/profile?access_token=' .$sid);
-
-        $this->assertResponseOk();
-        $this->seeJson($user->toArray());
-
         $this->post('/sso/server/commands/check', [
             'access_token' => $sid
         ]);
@@ -434,7 +424,7 @@ class ServerControllerTest extends TestCase
         $this->seeJson(['message' => 'Command not found.']);
 
         $this->app['config']->set('laravel-sso.commands', [
-            'check' => function($user, $broker, $request) {
+            'check' => function($broker, $request) {
                 return [
                     'success' => true,
                     'foo' => $request->input('foo')
