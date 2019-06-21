@@ -26,7 +26,7 @@ class ServerController extends Controller
     public function __construct(ServerBrokerManager $broker, ServerSessionManager $session)
     {
         $this->middleware(ValidateBroker::class)->except('attach');
-        $this->middleware(ServerAuthenticate::class)->only(['profile', 'commands', 'logout']);
+        $this->middleware(ServerAuthenticate::class)->only(['profile', 'logout']);
 
         $this->broker = $broker;
         $this->session = $session;
@@ -174,22 +174,13 @@ class ServerController extends Controller
     }
 
     /**
-     * Get user profile
+     * Run command
      *
      * @param \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
     public function commands(Request $request, $command)
     {
-        $user = $this->afterAuthenticatingUser(
-            $this->guard()->user(),
-            $request
-        );
-
-        if (!$user) {
-            return response()->json([], 401);
-        }
-
         $commands = config('laravel-sso.commands', []);
 
         if (!array_key_exists($command, $commands)) {
@@ -200,7 +191,7 @@ class ServerController extends Controller
         $broker = $this->broker->getBrokerFromRequest($request);
 
         if (is_callable($closure)) {
-            return response()->json($closure($user, $broker, $request));
+            return response()->json($closure($broker, $request));
         }
 
         return response()->json(null);
